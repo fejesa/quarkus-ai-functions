@@ -21,29 +21,31 @@ public class StatisticUserService {
         - If external id does not defined, the result contains only the person data, and return the following JSON structure:
           Example:
           {
+           "type": "NOMATCH",
            "person": {
-             "firstName": "John",
-             "lastName": "Doe",
-             "birthDate": "1980-01-01"
+             "firstName": <firstName>,
+             "lastName": <lastName>,
+             "birthDate": <birthDate>
            }
           }
 
         - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
           Example:
           {
-           "externalId": my-extid-123,
+           "type": "EXACT",
+           "externalId": <externalId>,
            "user": {
              "person": {
-               "firstName": "John",
-               "lastName": "Doe",
-               "birthDate": "1980-01-01"
+               "firstName": <firstName>,
+               "lastName": <lastName>,
+               "birthDate": <birthDate>
              },
              "address": {
-               "country": "DE",
-               "city": "Berlin",
-               "zipCode": "10115",
-               "street": "Example St.",
-               "houseNumber": "5"
+               "country": <country>,
+               "city": <city>,
+               "zipCode": <zipCode>,
+               "street": <street>,
+               "houseNumber": <houseNumber>
              }
            }
          }
@@ -51,33 +53,34 @@ public class StatisticUserService {
        - If multiple similar users are found, the result is a JSON array, and does not contain the external id, and return the following structure:
          Example:
          {
+           "type": "SIMILAR",
            "users": [
              {
                "person": {
-                 "firstName": "Jane",
-                 "lastName": "Smith",
-                 "birthDate": "1985-02-10"
+                 "firstName": <firstName>,
+                 "lastName": <lastName>,
+                 "birthDate": <birthDate>
                },
                "address": {
-                 "country": "DE",
-                 "city": "Hamburg",
-                 "zipCode": "20095",
-                 "street": "Sample Str.",
-                 "houseNumber": "10"
+                 "country": <country>,
+                 "city": <city>,
+                 "zipCode": <zipCode>,
+                 "street": <street>,
+                 "houseNumber": <houseNumber>
                }
              },
              {
                "person": {
-                 "firstName": "Jane",
-                 "lastName": "Smyth",
-                 "birthDate": "1985-02-10"
+                 "firstName": <firstName>,
+                 "lastName": <lastName>,
+                 "birthDate": <birthDate>
                },
                "address": {
-                 "country": "DE",
-                 "city": "Munich",
-                 "zipCode": "80331",
-                 "street": "Another Str.",
-                 "houseNumber": "11"
+                 "country": <country>,
+                 "city": <city>,
+                 "zipCode": <zipCode>,
+                 "street": <street>,
+                 "houseNumber": <houseNumber>
                }
              }
            ]

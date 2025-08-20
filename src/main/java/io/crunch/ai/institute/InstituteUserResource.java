@@ -1,6 +1,8 @@
 package io.crunch.ai.institute;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crunch.ai.statistic.UserQuery;
+import io.crunch.ai.statistic.UserSearchResult;
 import io.quarkus.logging.Log;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -19,9 +21,17 @@ public class InstituteUserResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public String search(@BeanParam @Valid UserQuery query) {
+    public UserSearchResult search(@BeanParam @Valid UserQuery query) {
         Log.info("Received user search request: " + query);
         // TODO: fetch user from institute service and then call the agent
-        return userService.search(query);
+        try {
+            var result = userService.search(query);
+            var userSearchResult = new ObjectMapper().readValue(result, UserSearchResult.class);
+            return userSearchResult;
+        } catch (Exception e) {
+            Log.error("Error processing user search request", e);
+            throw new WebApplicationException("Failed to process user search request", e, 500);
+        }
     }
+
 }
