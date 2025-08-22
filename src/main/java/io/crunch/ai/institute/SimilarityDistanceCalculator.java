@@ -4,11 +4,12 @@ import dev.langchain4j.agent.tool.Tool;
 import io.crunch.ai.common.Address;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-
-import java.util.Random;
+import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 
 @ApplicationScoped
 public class SimilarityDistanceCalculator {
+
+    private static final JaroWinklerSimilarity SIMILARITY = new JaroWinklerSimilarity();
 
     @Tool(
         name = "jaroWinklerSimilarity",
@@ -25,6 +26,27 @@ public class SimilarityDistanceCalculator {
     )
     public double jaroWinklerSimilarity(Address original, Address similar) {
         Log.info("Calculating the similarity between original address: " + original + " and similar address: " + similar);
-        return new Random().nextDouble(1.0);
+        String normalized1 = normalize(original);
+        String normalized2 = normalize(similar);
+        var score = SIMILARITY.apply(normalized1, normalized2);
+        Log.info("Calculated similarity score: " + score);
+        return score;
+    }
+
+    private String normalize(Address address) {
+        if (address == null) {
+            return "";
+        }
+        return String.join(" ",
+                safeUpper(address.country()),
+                safeUpper(address.city()),
+                safeUpper(address.zipCode()),
+                safeUpper(address.street()),
+                safeUpper(address.houseNumber())
+        ).trim();
+    }
+
+    private String safeUpper(String value) {
+        return value == null ? "" : value.trim().toUpperCase();
     }
 }

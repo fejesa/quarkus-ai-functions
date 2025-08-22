@@ -10,5 +10,6 @@ public record ExtendedUserQuery(
         @Description("Address city") String city,
         @Description("Address postal code") String zipCode,
         @Description("Address street") String street,
-        @Description("Address house number") String houseNumber) {
+        @Description("Address house number") String houseNumber,
+        @Description("Highest similarity score value of the address") double similarityScore) {
 }

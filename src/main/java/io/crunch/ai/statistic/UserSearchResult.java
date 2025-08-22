@@ -21,7 +21,7 @@ record NoMatchResult(Person person) implements UserSearchResult {}
 record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {}
 
 @UserSearchResultSubType("EXACTMATCH")
-record ExactMatchResult(String externalId, MatchUser user) implements UserSearchResult {}
+record ExactMatchResult(String externalId, MatchUser user, Double score) implements UserSearchResult {}
 
 record MatchUser(Person person, Address address) {}
 
