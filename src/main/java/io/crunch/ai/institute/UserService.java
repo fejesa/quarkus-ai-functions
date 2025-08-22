@@ -36,11 +36,16 @@ public interface UserService {
             5. If the search returns SIMILARMATCH candidate users:
                a. First, call the tool `getUserAddress` with the original Person.
                   - Capture its output as `original`.
-                  - This MUST be passed as the first parameter in every later call to `jaroWinklerSimilarity`.
-               b. For each candidate user returned by the search, extract the candidate's address from the result.
-                  - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
-                  - NEVER pass null or empty objects.
-                  - Collect the similarity scores for all candidates.
+                   - This output is ONLY used as the baseline in the `original` parameter of `jaroWinklerSimilarity`.
+                   - NEVER use this `original` address as a candidate address.
+               b. For each candidate user returned by the search:
+                   - Extract the candidate's address ONLY from the search result JSON.
+                   - Do NOT call getUserAddress for candidates.
+                   - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
+                   - NEVER pass null, empty, or substituted addresses.
+                   - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
+                   - NEVER pass null or empty objects.
+                   - Collect the similarity scores for all candidates.
                c. You MUST NOT call `jaroWinklerSimilarity` until both `original` and a candidate's address are available.
                   - Always set parameter 'original' = the output of getUserAddress(Person).
                   - Always set parameter 'similar' = the candidate user’s address from the search result.
