@@ -17,10 +17,10 @@ public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesRe
 @UserSearchResultSubType("NOMATCH")
 record NoMatchResult(Person person) implements UserSearchResult {}
 
-@UserSearchResultSubType("SIMILAR")
+@UserSearchResultSubType("SIMILARMATCH")
 record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {}
 
-@UserSearchResultSubType("EXACT")
+@UserSearchResultSubType("EXACTMATCH")
 record ExactMatchResult(String externalId, MatchUser user) implements UserSearchResult {}
 
 record MatchUser(Person person, Address address) {}

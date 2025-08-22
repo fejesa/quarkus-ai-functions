@@ -17,23 +17,30 @@ public interface UserService {
         1. The query contains the first name, last name, and birth date of the user.
         2. You MUST respond by invoking the available TOOLS. You MUST NOT answer the query yourself.
         3. The ONLY valid response is a tool call. Do not invent or guess data.
-        4. When multiple similar users are returned:
-          a. First, call the tool `getUserAddress` with the original Person.
+        4. Decision rules for handling search results:
+           a. If the search returns NOMATCH users:
+              - Immediately return the search result JSON object.
+              - Do NOT call any other tools afterwards.
+           b. If the search returns EXACTMATCH user:
+              - Immediately return the search result JSON object.
+              - Do NOT call any other tools afterwards.
+        5. If the search returns SIMILARMATCH candidate users:
+           a. First, call the tool `getUserAddress` with the original Person.
              - Capture its output as `original`.
              - This MUST be passed as the first parameter in every later call to `jaroWinklerSimilarity`.
-          b. For each candidate user returned by the search, extract the candidate's address from the result.
+           b. For each candidate user returned by the search, extract the candidate's address from the result.
              - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
              - NEVER pass null or empty objects.
-          c. You MUST NOT call `jaroWinklerSimilarity` until both `original` and a candidate's address are available.
-            - Always set parameter 'original' = the output of getUserAddress(Person).
-            - Always set parameter 'similar' = the candidate user’s address from the search result.
-            - Never swap them.
-        5. It is allowed to call multiple different tools in sequence to complete the task.
+           c. You MUST NOT call `jaroWinklerSimilarity` until both `original` and a candidate's address are available.
+             - Always set parameter 'original' = the output of getUserAddress(Person).
+             - Always set parameter 'similar' = the candidate user’s address from the search result.
+             - Never swap them.
+        6. It is allowed to call multiple different tools in sequence to complete the task.
            - Do not call the same tool twice with the same input.
-        6. Once all required tool calls are completed, return the final JSON result directly.
-        7. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
-        8. Do not add fields like "message", "error", "code", "status", "result", "name" or any other keys.
-        9. Return ONLY a JSON object, not surrounded by markdown, not with explanations.
+        7. Once all required tool calls are completed, return the final JSON result directly.
+        8. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
+        9. Do not add fields like "message", "error", "code", "status", "result", "name" or any other keys.
+        10. Return ONLY a JSON object, not surrounded by markdown, not with explanations.
        """)
     @ToolBox({StatisticUserService.class, InstituteUserService.class, SimilarityDistanceCalculator.class})
     String search(@UserMessage UserQuery query);

@@ -32,7 +32,7 @@ public class StatisticUserService {
         - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
           Example:
           {
-           "type": "EXACT",
+           "type": "EXACTMATCH",
            "externalId": <externalId>,
            "user": {
              "person": {
@@ -53,7 +53,7 @@ public class StatisticUserService {
        - If multiple similar users are found, the result is a JSON array, and does not contain the external id, and return the following structure:
          Example:
          {
-           "type": "SIMILAR",
+           "type": "SIMILARMATCH",
            "users": [
              {
                "person": {
@@ -128,7 +128,7 @@ public class StatisticUserService {
             - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
               Example:
               {
-               "type": "EXACT",
+               "type": "EXACTMATCH",
                "externalId": <externalId>,
                "user": {
                  "person": {
