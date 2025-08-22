@@ -26,6 +26,7 @@ public class InstituteUserResource {
         // TODO: fetch user from institute service and then call the agent
         try {
             var result = userService.search(query);
+            Log.info("User search result: " + result);
             var userSearchResult = new ObjectMapper().readValue(result, UserSearchResult.class);
             return userSearchResult;
         } catch (Exception e) {
