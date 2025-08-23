@@ -54,6 +54,12 @@ public interface UserService {
              - For EXACTMATCH:
                - `person` MUST be nested inside `user`.
                - Never output `person` as a top-level field in this case.
+               - "externalId", "score", and "explanation" are MANDATORY fields.
+               - They must always appear in the JSON, never missing, never null, never empty.
+               - If a real value cannot be calculated, output a placeholder string:
+                 - externalId: "UNKNOWN"
+                 - score: 1.0
+                 - explanation: "No explanation available"
              - If SIMILARMATCH: a list of candidates, each with fields:
                - candidate user details
                - similarityScore

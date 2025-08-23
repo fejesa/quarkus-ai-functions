@@ -18,7 +18,7 @@ public class StatisticUserService {
         - If the result type is NOMATCH or EXACTMATCH → YOU MUST RETURN IT IMMEDIATELY AS FINAL OUTPUT. DO NOT call any other tools afterwards.
         - You must call this tool exactly once at the start of processing.
         - Never skip it.
-        
+
         MANDATORY PARAMETERS:
         - `firstName`, `lastName`, and `birthDate` MUST always be provided from the Person input.
         - They MUST NOT be null, empty, invented, or altered.
@@ -42,6 +42,12 @@ public class StatisticUserService {
           - The `person` object MUST be nested inside the `user` object.
           - Do not move `person` outside of `user`.
           - Do not remove or rename any fields.
+          - "externalId", "score", and "explanation" MUST always be present.
+            - They must never be omitted, null, or empty.
+            - If unknown, use:
+              - externalId: "UNKNOWN"
+              - score: 1.0
+              - explanation: "No explanation available"
           - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
               Example:
               {
@@ -106,22 +112,22 @@ public class StatisticUserService {
          }
      """
     })
-    public UserSearchResult searchUser(UserSearchQuery userSearchQuery) {
-        Log.info("Searching for user with query: " + userSearchQuery);
-        if ("NoMatch".equals(userSearchQuery.firstName())) {
+    public UserSearchResult searchUser(String firstName, String lastName, String birthDate) {
+        Log.info("Searching for user with query: firstName=" + firstName + ", lastName=" + lastName + ", birthDate=" + birthDate);
+        if ("NoMatch".equals(firstName)) {
             // Simulate no match found
-            return new NoMatchResult(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()));
-        } else if ("ExactMatch".equals(userSearchQuery.firstName())) {
+            return new NoMatchResult(new Person(firstName, lastName, birthDate));
+        } else if ("ExactMatch".equals(firstName)) {
             // Simulate exact match found
             return new ExactMatchResult("My-Ext-123",
-                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()),
+                    new MatchUser(new Person(firstName, lastName, birthDate),
                     new Address("Germany", "Berlin", "10115", "Street Name", new Random().nextInt(1, 100) + ""),
                     1.0, "exact match, same person"));
         } else {
             // Simulate similar matches found
             return new SimilarMatchesResult(List.of(
-                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10"), 0.0, ""),
-                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, "")
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, "")
             ));
         }
     }
