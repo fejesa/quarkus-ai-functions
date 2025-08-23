@@ -53,10 +53,16 @@ public interface UserService {
               - Include the candidate’s details.
               - Include the similarity score.
               - Add a short natural-language explanation of what the score means
-                - You MUST explicitly compare the original and similar address field-by-field:
-                   - If a field is identical, you may skip it in the explanation.
-                   - If a field differs, mention it clearly (e.g. "different city", "zip code mismatch", "street name differs").
-                   - The explanation must contain which parts of the address are equal and which differ.
+                - You MUST explicitly compare ALL five address fields (country, city, zipCode, street, houseNumber).
+                - For each field:
+                  * If the value is identical → say "<field> matches".
+                  * If the value differs → say "<field> differs".
+                - The explanation MUST always cover all five fields, in a consistent order:
+                  country → city → zipCode → street → houseNumber.
+                - Example:
+                  "Similarity 0.82. country matches, city differs, zipCode differs, street matches, houseNumber matches."
+                - After listing the field-by-field comparison, add a short summary interpretation
+                  (e.g., "High similarity, most fields match" / "Medium similarity, some fields differ").
             - Do not recompute or modify scores — use them exactly as returned.
 
             OUTPUT RULES
