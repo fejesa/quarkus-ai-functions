@@ -17,7 +17,7 @@ public interface UserService {
             - If you cannot proceed because of missing data, STOP and return the last valid result.
 
             TERMINATION RULES
-            - If `searchUser` returns NOMATCH → you IMMEDIATELY return that result as final output. Do NOT call any other tools. STOP IMMEDIATELY.
+            - If `searchUser` returns NOMATCH → you MUST IMMEDIATELY return that result as final output. Do NOT call any other tools. STOP IMMEDIATELY.
             - If `searchUser` returns EXACTMATCH → you MUST IMMEDIATELY return that result as the final output. Do NOT call any other tools. STOP IMMEDIATELY.
             - If `searchUser` returns SIMILARMATCH → you are FORBIDDEN to stop.
              - You MUST continue the workflow:
@@ -102,7 +102,7 @@ public interface UserService {
             WORKFLOW
             1. Always begin with `searchUser(firstName, lastName, birthDate)`.
             2. Based on result:
-              - NOMATCH → IMMEDIATELY stop and return NOMATCH JSON. Do NOT call any other tools afterwards.
+              - NOMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
               - EXACTMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
               - SIMILARMATCH → you are NOT ALLOWED to stop here.
                 * You MUST first call `getUserAddress` once.
