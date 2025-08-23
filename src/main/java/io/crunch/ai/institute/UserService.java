@@ -53,7 +53,10 @@ public interface UserService {
               - Include the candidate’s details.
               - Include the similarity score.
               - Add a short natural-language explanation of what the score means
-                (e.g., "high similarity, likely same person", "medium similarity, partial match", "low similarity, unlikely match").
+                - You MUST explicitly compare the original and similar address field-by-field:
+                   - If a field is identical, you may skip it in the explanation.
+                   - If a field differs, mention it clearly (e.g. "different city", "zip code mismatch", "street name differs").
+                   - The explanation must contain which parts of the address are equal and which differ.
             - Do not recompute or modify scores — use them exactly as returned.
 
             OUTPUT RULES
