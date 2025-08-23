@@ -12,13 +12,16 @@ import java.util.Random;
 @ApplicationScoped
 public class StatisticUserService {
 
-    @Tool(name = "searchUserByFirstNameAndLastNameAndBirthDate", value = {
+    @Tool(name = "searchUser", value = {
         """
         THIS TOOL IS ALWAYS THE FIRST TOOL TO CALL.
         - If the result type is NOMATCH or EXACTMATCH → YOU MUST RETURN IT IMMEDIATELY AS FINAL OUTPUT. DO NOT call any other tools afterwards.
         - You must call this tool exactly once at the start of processing.
         - Never skip it.
-        - Never replace it with extendedUserSearch.
+        
+        MANDATORY PARAMETERS:
+        - `firstName`, `lastName`, and `birthDate` MUST always be provided from the Person input.
+        - They MUST NOT be null, empty, invented, or altered.
 
         Search for a user and its external id in the statistic database based only on firstName, lastName, and birthDate.
         Always return a valid JSON object. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
@@ -35,26 +38,32 @@ public class StatisticUserService {
            }
           }
 
-        - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
-          Example:
-          {
-           "type": "EXACTMATCH",
-           "externalId": <externalId>,
-           "user": {
-             "person": {
-               "firstName": <firstName>,
-               "lastName": <lastName>,
-               "birthDate": <birthDate>
-             },
-             "address": {
-               "country": <country>,
-               "city": <city>,
-               "zipCode": <zipCode>,
-               "street": <street>,
-               "houseNumber": <houseNumber>
+        - If exactly one matching user is found, you MUST return the following structure exactly.
+          - The `person` object MUST be nested inside the `user` object.
+          - Do not move `person` outside of `user`.
+          - Do not remove or rename any fields.
+          - If exactly one matching user is found, the result is not a JSON array, and contains the external id, and return the following structure:
+              Example:
+              {
+               "type": "EXACTMATCH",
+               "externalId": <externalId>,
+               "user": {
+                 "person": {
+                   "firstName": <firstName>,
+                   "lastName": <lastName>,
+                   "birthDate": <birthDate>
+                 },
+                 "address": {
+                   "country": <country>,
+                   "city": <city>,
+                   "zipCode": <zipCode>,
+                   "street": <street>,
+                   "houseNumber": <houseNumber>
+                 },
+                "score": <similarityScore>,
+                "explanation": <explanation>
+               }
              }
-           }
-         }
 
        - If multiple similar users are found, the result is a JSON array, and does not contain the external id, and return the following structure:
          Example:
@@ -73,7 +82,9 @@ public class StatisticUserService {
                  "zipCode": <zipCode>,
                  "street": <street>,
                  "houseNumber": <houseNumber>
-               }
+               },
+               "score": <similarityScore>,
+               "explanation": <explanation>
              },
              {
                "person": {
@@ -87,92 +98,31 @@ public class StatisticUserService {
                  "zipCode": <zipCode>,
                  "street": <street>,
                  "houseNumber": <houseNumber>
-               }
+               },
+               "score": <similarityScore>,
+               "explanation": <explanation>
              }
            ]
          }
      """
     })
-    public UserSearchResult searchUserByFirstNameAndLastNameAndBirthDate(UserQuery query) {
-        Log.info("Searching for user with simple query: " + query);
-        if ("NoMatch".equals(query.firstName())) {
+    public UserSearchResult searchUser(UserSearchQuery userSearchQuery) {
+        Log.info("Searching for user with query: " + userSearchQuery);
+        if ("NoMatch".equals(userSearchQuery.firstName())) {
             // Simulate no match found
-            return new NoMatchResult(new Person(query.firstName(), query.lastName(), query.birthDate()));
-        } else if ("ExactMatch".equals(query.firstName())) {
+            return new NoMatchResult(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()));
+        } else if ("ExactMatch".equals(userSearchQuery.firstName())) {
             // Simulate exact match found
             return new ExactMatchResult("My-Ext-123",
-                    new MatchUser(new Person(query.firstName(), query.lastName(), query.birthDate()),
-                    new Address("Germany", "Berlin", "10115", "Street Name", new Random().nextInt(1, 100) + "")
-                    ), 0.0);
+                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()),
+                    new Address("Germany", "Berlin", "10115", "Street Name", new Random().nextInt(1, 100) + ""),
+                    1.0, "exact match, same person"));
         } else {
             // Simulate similar matches found
             return new SimilarMatchesResult(List.of(
-                    new MatchUser(new Person(query.firstName(), query.lastName(), query.birthDate()), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10")),
-                    new MatchUser(new Person(query.firstName(), query.lastName(), query.birthDate()), new Address("Germany", "Munich", "80331", "Another Str.", "11"))
+                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10"), 0.0, ""),
+                    new MatchUser(new Person(userSearchQuery.firstName(), userSearchQuery.lastName(), userSearchQuery.birthDate()), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, "")
             ));
         }
-
-    }
-
-    @Tool(name = "extendedUserSearch",
-          value = """
-        Use this tool to perform an extended user search in the Statistic database based both person and address data.
-        Always return a valid JSON object. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
-
-        WHEN TO USE:
-        - Never as the first tool.
-        - After comparing addresses with `jaroWinklerSimilarity`,
-          select the single candidate user with the HIGHEST similarity score.
-        - Do not call this tool multiple times. Call it EXACTLY once with the best candidate.
-
-        INPUT:
-        - ExtendedUserQuery object with the following fields:
-            * firstName (string)   → from the original Person
-            * lastName (string)    → from the original Person
-            * birthDate (string)   → from the original Person
-            * country (string)     → from the selected candidate’s Address (never null)
-            * city (string)        → from the selected candidate’s Address (never null)
-            * zipCode (string)     → from the selected candidate’s Address (never null)
-            * street (string)      → from the selected candidate’s Address (never null)
-            * houseNumber (string) → from the selected candidate’s Address (never null)
-            * similarityScore (number) → the similarity score of the selected candidate
-
-        OUTPUT:
-        - Always return a JSON object with one of the following cases:
-            {
-              "type": "EXACTMATCH",
-              "externalId": "<externalId>",
-              "score": <similarityScore>,
-              "user": {
-                "person": {
-                  "firstName": "<firstName>",
-                  "lastName": "<lastName>",
-                  "birthDate": "<birthDate>"
-                },
-                "address": {
-                  "country": "<country>",
-                  "city": "<city>",
-                  "zipCode": "<zipCode>",
-                  "street": "<street>",
-                  "houseNumber": "<houseNumber>"
-                }
-              }
-            }
-
-        RULES:
-        - Copy all address fields directly from the chosen candidate.
-        - Never invent or leave fields empty.
-        - Always include the `similarityScore` field with the exact numeric value from the calculation.
-        - Never call this tool before all similarity scores are calculated.
-        - Never call this tool more than once.
-    """
-    )
-    public UserSearchResult extendedSearch(ExtendedUserQuery query) {
-        Log.info("Searching for user with extended query: " + query);
-        // Simulate extended search logic
-        return new ExactMatchResult("My-Ext-ABCD",
-                new MatchUser(new Person(query.firstName(), query.lastName(), query.birthDate()),
-                        new Address(query.country(), query.city(), query.zipCode(), query.street(), query.houseNumber())
-                ), query.similarityScore());
     }
 }

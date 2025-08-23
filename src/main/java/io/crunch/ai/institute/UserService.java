@@ -3,7 +3,7 @@ package io.crunch.ai.institute;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.crunch.ai.statistic.StatisticUserService;
-import io.crunch.ai.statistic.UserQuery;
+import io.crunch.ai.statistic.UserSearchQuery;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 
@@ -16,73 +16,53 @@ public interface UserService {
             - You are NOT allowed to repeat tool calls with the same input.
             - If you cannot proceed because of missing data, STOP and return the last valid result.
 
-            ABSOLUTE TERMINATION RULES
-            - If the first tool `searchUserByFirstNameAndLastNameAndBirthDate` returns `"type": "NOMATCH"`, you MUST IMMEDIATELY return that result as the final output. Do NOT call any other tools. STOP IMMEDIATELY.
-            - If the first tool returns `"type": "EXACTMATCH"`, you MUST IMMEDIATELY return that result as the final output. Do NOT call any other tools. STOP IMMEDIATELY.
+            TERMINATION RULES
+            - If the first tool `searchUser` returns NOMATCH, IMMEDIATELY return that result as the final output. Do NOT call any other tools.
+            - If the first tool returns EXACTMATCH, IMMEDIATELY return that result as the final output. Do NOT call any other tools.
             - Continuing beyond these cases is an error.
 
-            Your role is to search user information from the Statistic service based on the provided query.
-            Rules:
-            1. The query contains the first name, last name, and birth date of the user.
-            2. You MUST respond by invoking the available TOOLS. You MUST NOT answer the query yourself.
-            3. The ONLY valid response is a tool call. Do not invent or guess data.
-            4. Decision rules for handling search results:
-               a. If the search returns NOMATCH users:
-                  - Immediately return the search result JSON object.
-                  - Do NOT call any other tools afterwards.
-               b. If the search returns EXACTMATCH user:
-                  - Immediately return the search result JSON object.
-                  - Do NOT call any other tools afterwards.
-            5. If the search returns SIMILARMATCH candidate users:
-               a. First, call the tool `getUserAddress` with the original Person.
-                  - Capture its output as `original`.
-                   - This output is ONLY used as the baseline in the `original` parameter of `jaroWinklerSimilarity`.
-                   - NEVER use this `original` address as a candidate address.
-               b. For each candidate user returned by the search:
-                   - Extract the candidate's address ONLY from the search result JSON.
-                   - Do NOT call getUserAddress for candidates.
-                   - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
-                   - NEVER pass null, empty, or substituted addresses.
-                   - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
-                   - NEVER pass null or empty objects.
-                   - Collect the similarity scores for all candidates.
-               c. You MUST NOT call `jaroWinklerSimilarity` until both `original` and a candidate's address are available.
-                  - Always set parameter 'original' = the output of getUserAddress(Person).
-                  - Always set parameter 'similar' = the candidate user’s address from the search result.
-                  - Never swap them.
-               d. After all similarities are calculated:
-                  - Identify the candidate with the HIGHEST similarity score.
-                  - DO NOT recompute the score; reuse the numeric value from the corresponding `jaroWinklerSimilarity` result.
-               e. Construct an ExtendedUserQuery object with ALL of the following:
-                  - firstName, lastName, birthDate → from the original query (Person).
-                  - country, city, zipCode, street, houseNumber → EXACTLY from the chosen candidate’s address.
-                     → You MUST copy each field directly. None of them may be null or missing.
-                  - similarityScore → the numeric score value returned by `jaroWinklerSimilarity` for the selected candidate.
-                    → You MUST copy this number exactly, without rounding or modification.
-               f. Call `extendedUserSearch` EXACTLY once with this ExtendedUserQuery.
-                  - Ensure the ExtendedUserQuery JSON includes the candidate’s person, full address and the similarityScore fields.
-                  - Do not return until `extendedUserSearch` has been executed.
-            6. It is allowed to call multiple different tools in sequence to complete the task.
-               - Do not call the same tool twice with the same input.
-            7. Once all required tool calls are completed, return the final JSON result directly.
-            8. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
-            9. Do not add fields like "message", "error", "code", "status", "result", "name" or any other keys.
-            10. When invoking `extendedUserSearch`, the ExtendedUserQuery MUST look like this:
-                {
-                  "firstName": "<from original query>",
-                  "lastName": "<from original query>",
-                  "birthDate": "<from original query>",
-                  "country": "<from candidate>",
-                  "city": "<from candidate>",
-                  "zipCode": "<from candidate>",
-                  "street": "<from candidate>",
-                  "houseNumber": "<from candidate>",
-                  "similarityScore": <numeric value from jaroWinklerSimilarity>
-                }
-            11. Return ONLY a JSON object, not surrounded by markdown, not with explanations.
+            PARAMETER RULES
+            - The first tool call MUST always use `firstName`, `lastName`, and `birthDate` DIRECTLY from the Person input.
+              - These three parameters are MANDATORY.
+              - They MUST NEVER be null, empty, omitted, or substituted.
+              - They MUST match the input exactly, character-for-character.
+            - For similarity checks:
+              - Always call `getUserAddress` ONCE with the original Person to get the baseline `original` address.
+              - NEVER call `getUserAddress` for candidate users. Their addresses come only from the search result.
+              - For each candidate from the search result:
+                - Pass `original` = Person’s address (from getUserAddress)
+                - Pass `similar` = Candidate’s address (from search result)
+                - Never pass null, empty, or substituted values.
+
+            SIMILAR MATCH RULES
+            - For each candidate, calculate similarity with `jaroWinklerSimilarity`.
+            - Collect all scores.
+            - For each candidate in the final JSON output:
+              - Include the candidate’s details.
+              - Include the similarity score.
+              - Add a short natural-language explanation of what the score means
+                (e.g., "high similarity, likely same person", "medium similarity, partial match", "low similarity, unlikely match").
+            - Do not recompute or modify scores — use them exactly as returned.
+
+            OUTPUT RULES
+            - Always return ONLY a JSON object.
+            - Do not add markdown or extra fields.
+            - Do not add fields like "message", "error", "code", "status", "result", "name" or any other keys.
+            - The JSON must contain:
+             - "type": NOMATCH | EXACTMATCH | SIMILARMATCH
+             - "person": the original query Person object (firstName, lastName, birthDate) must ALWAYS be included, regardless of match type.
+             - For EXACTMATCH:
+               - `person` MUST be nested inside `user`.
+               - Never output `person` as a top-level field in this case.
+             - If SIMILARMATCH: a list of candidates, each with fields:
+               - candidate user details
+               - similarityScore
+               - explanation
+
+            Your role is to orchestrate the tool calls correctly and return the structured JSON as described.
             """
     )
     @ToolBox({StatisticUserService.class, InstituteUserService.class, SimilarityDistanceCalculator.class})
-    String search(@UserMessage UserQuery query);
+    String search(@UserMessage UserSearchQuery userSearchQuery);
 
 }

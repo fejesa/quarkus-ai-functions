@@ -1,7 +1,7 @@
 package io.crunch.ai.institute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.crunch.ai.statistic.UserQuery;
+import io.crunch.ai.statistic.UserSearchQuery;
 import io.crunch.ai.statistic.UserSearchResult;
 import io.quarkus.logging.Log;
 import jakarta.validation.Valid;
@@ -21,7 +21,7 @@ public class InstituteUserResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public UserSearchResult search(@BeanParam @Valid UserQuery query) {
+    public UserSearchResult search(@BeanParam @Valid UserSearchQuery query) {
         Log.info("Received user search request: " + query);
         // TODO: fetch user from institute service and then call the agent
         try {
