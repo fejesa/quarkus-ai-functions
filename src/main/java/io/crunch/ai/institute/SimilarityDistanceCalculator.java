@@ -41,16 +41,16 @@ public class SimilarityDistanceCalculator {
         if (address == null) {
             return "";
         }
-        return String.join(" ",
-                safeUpper(address.country()),
-                safeUpper(address.city()),
-                safeUpper(address.zipCode()),
-                safeUpper(address.street()),
-                safeUpper(address.houseNumber())
+        return String.join("",
+                toUpper(address.country()),
+                toUpper(address.city()),
+                toUpper(address.zipCode()),
+                toUpper(address.street()),
+                toUpper(address.houseNumber())
         ).trim();
     }
 
-    private String safeUpper(String value) {
+    private String toUpper(String value) {
         return value == null ? "" : value.trim().toUpperCase();
     }
 }
