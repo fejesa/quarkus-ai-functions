@@ -130,7 +130,12 @@ public class StatisticUserService {
             // Simulate similar matches found
             return new SimilarMatchesResult(List.of(
                     new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, "")
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Cologne", "50667", "Different Str.", "12"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Frankfurt", "60311", "Other Str.", "13"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Stuttgart", "70173", "New Str.", "14"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Düsseldorf", "40213", "Old Str.", "15"), 0.0, ""),
+                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Dortmund", "44135", "Main Str.", "16"), 0.0, "")
             ));
         }
     }
