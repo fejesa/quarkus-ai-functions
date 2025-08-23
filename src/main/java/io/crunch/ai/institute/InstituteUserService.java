@@ -11,11 +11,28 @@ public class InstituteUserService {
 
     @Tool(name = "getUserAddress",
           value = """
-            Use this tool when you need to obtain the full address of a person.
-            Input: a Person object containing first name, last name, and birth date.
-            Output: an Address object containing country, city, zipCode, street, and houseNumber.
-            This tool should be called if multiple similar users are returned by the first search
-            and you need more information (address data) to extend the search criteria.
+            Use this tool to obtain the full address of the ORIGINAL query person.
+            Input: a Person object containing:
+            - firstName (non-null, non-empty, exact from input)
+            - lastName (non-null, non-empty, exact from input)
+            - birthDate (non-null, non-empty, exact from input)
+            Output: Returns the ORIGINAL person's Address as a JSON OBJECT (not a string) with fields:
+               {
+                 "country": "<string>",
+                 "city": "<string>",
+                 "zipCode": "<string>",
+                 "street": "<string>",
+                 "houseNumber": "<string>"
+               }
+
+            RULES:
+             - If `searchUser` returns SIMILARMATCH, you are REQUIRED to call this tool exactly once.
+             - Skipping this tool call in a SIMILARMATCH flow is a violation of the rules.
+             - Final output MUST NOT be produced until after this tool is called and its result is used in similarity checks.
+             - NEVER call this tool for candidate users — their addresses come directly from the search results.
+             - The returned address is called 'original' and will be used as the baseline for similarity checks.
+             - The Person input to this tool MUST NEVER be null, empty, or substituted.
+             - Passing null is a violation of the rules.
         """
     )
     public Address getUserAddress(Person person) {

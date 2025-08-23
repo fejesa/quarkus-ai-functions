@@ -17,15 +17,21 @@ public interface UserService {
             - If you cannot proceed because of missing data, STOP and return the last valid result.
 
             TERMINATION RULES
-            - If the first tool `searchUser` returns NOMATCH, IMMEDIATELY return that result as the final output. Do NOT call any other tools.
-            - If the first tool returns EXACTMATCH, IMMEDIATELY return that result as the final output. Do NOT call any other tools.
-            - Continuing beyond these cases is an error.
+            - If `searchUser` returns NOMATCH → you IMMEDIATELY return that result as final output. Do NOT call any other tools. STOP IMMEDIATELY.
+            - If `searchUser` returns EXACTMATCH → you MUST IMMEDIATELY return that result as the final output. Do NOT call any other tools. STOP IMMEDIATELY.
+            - If `searchUser` returns SIMILARMATCH → you are FORBIDDEN to stop.
+             - You MUST continue the workflow:
+               1. Call `getUserAddress` once for the original Person.
+               2. For EACH candidate, call `jaroWinklerSimilarity(original, similar)`.
+               3. Collect all scores and explanations.
+               4. ONLY THEN construct and return the final JSON output.
+             - Returning JSON without calling `getUserAddress` AND all `jaroWinklerSimilarity` calls is a violation of the rules.
 
-            PARAMETER RULES
-            - The first tool call MUST always use `firstName`, `lastName`, and `birthDate` DIRECTLY from the Person input.
-              - These three parameters are MANDATORY.
-              - They MUST NEVER be null, empty, omitted, or substituted.
-              - They MUST match the input exactly, character-for-character.
+            PARAMETER BINDING RULES
+            - The very first tool call `searchUser` MUST always use `firstName`, `lastName`, and `birthDate` values DIRECTLY from the original input.
+            - They `firstName`, `lastName`, and `birthDate` MUST NEVER be changed, corrected, reformatted, guessed, invented, replaced or substituted.
+            - Null values are forbidden. If input is missing, STOP and return the last valid result.
+            - Any deviation (e.g., replacing "NoMatch" with "John") is a violation of the rules.
             - For similarity checks:
               - Always call `getUserAddress` ONCE with the original Person to get the baseline `original` address.
               - NEVER call `getUserAddress` for candidate users. Their addresses come only from the search result.
@@ -33,6 +39,12 @@ public interface UserService {
                 - Pass `original` = Person’s address (from getUserAddress)
                 - Pass `similar` = Candidate’s address (from search result)
                 - Never pass null, empty, or substituted values.
+
+            PARAMETER ENCODING RULES (MANDATORY)
+            - When a tool parameter type is an object (e.g., Address), you MUST pass it as a JSON OBJECT, not as a string.
+            - Use double quotes only. Never use single quotes.
+            - Do NOT wrap objects in quotes. Do NOT send "{ ... }" as a string.
+            - Field names must be exactly: country, city, zipCode, street, houseNumber.
 
             SIMILAR MATCH RULES
             - For each candidate, calculate similarity with `jaroWinklerSimilarity`.
@@ -60,12 +72,35 @@ public interface UserService {
                  - externalId: "UNKNOWN"
                  - score: 1.0
                  - explanation: "No explanation available"
-             - If SIMILARMATCH: a list of candidates, each with fields:
-               - candidate user details
-               - similarityScore
-               - explanation
+             - If the `searchUser` result is SIMILARMATCH:
+               - `person` MUST be nested inside the `user`.
+               - Never output `person` as a top-level field in this case.
+               - First, call the tool `getUserAddress` with the original Person to get the `original` address.
+                 - Capture its output as `original`.
+                 - This output is ONLY used as the baseline in the `original` parameter of `jaroWinklerSimilarity`.
+                 - NEVER use this `original` address as a candidate address.
+               - For each candidate user returned by the search:
+                 - Extract the candidate's address ONLY from the search result JSON.
+                 - Do NOT call getUserAddress for candidates.
+                 - Pass this candidate address as the second parameter `similar` to `jaroWinklerSimilarity`.
+                 - NEVER pass null, empty, or substituted addresses.
+                 - Collect the similarity scores for all candidates.
+               - You MUST NOT call `jaroWinklerSimilarity` until both `original` and a candidate's address are available.
+                 - Always set parameter 'original' = the output of getUserAddress(Person).
+                 - Always set parameter 'similar' = the candidate’s address from the search result.
+                 - Never swap them.
 
-            Your role is to orchestrate the tool calls correctly and return the structured JSON as described.
+            WORKFLOW
+            1. Always begin with `searchUser(firstName, lastName, birthDate)`.
+            2. Based on result:
+              - NOMATCH → IMMEDIATELY stop and return NOMATCH JSON. Do NOT call any other tools afterwards.
+              - EXACTMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
+              - SIMILARMATCH → you are NOT ALLOWED to stop here.
+                * You MUST first call `getUserAddress` once.
+                * Then you MUST call `jaroWinklerSimilarity` once per candidate.
+                * Only AFTER all similarity scores are collected can you return the final SIMILARMATCH JSON.
+
+            Your role is to search user information from the Statistic service based on the provided query.
             """
     )
     @ToolBox({StatisticUserService.class, InstituteUserService.class, SimilarityDistanceCalculator.class})

@@ -19,11 +19,14 @@ public class StatisticUserService {
         - You must call this tool exactly once at the start of processing.
         - Never skip it.
 
-        MANDATORY PARAMETERS:
-        - `firstName`, `lastName`, and `birthDate` MUST always be provided from the Person input.
-        - They MUST NOT be null, empty, invented, or altered.
+        INPUT:
+        - firstName: MUST be copied exactly as given
+        - lastName: MUST be copied exactly as given
+        - birthDate: MUST be copied exactly as given
+        - These fields MUST NEVER be invented, substituted, normalized, or corrected.
+        - Even if the input looks invalid (e.g., "NoMatch"), still pass it unchanged.
 
-        Search for a user and its external id in the statistic database based only on firstName, lastName, and birthDate.
+        Search for a user and its external id in the statistic database based only by Person.
         Always return a valid JSON object. Do not add any additional explanatory text, and do not remove any fields from the JSON object.
 
         The following cases are possible:

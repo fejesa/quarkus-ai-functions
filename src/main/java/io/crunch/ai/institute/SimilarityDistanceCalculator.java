@@ -14,11 +14,15 @@ public class SimilarityDistanceCalculator {
     @Tool(
         name = "jaroWinklerSimilarity",
         value = """
-           Use this tool to compare two Address objects.
+        Use this tool to compare two Address objects.
            The FIRST parameter MUST ALWAYS be the result of the getUserAddress(Person), called 'original'.
            The SECOND parameter MUST ALWAYS be the candidate address from the search result, called 'similar'.
-           RULE: Each (original, similar) pair must be compared ONLY ONCE. Do not repeat comparisons for the same addresses.
-           Input:
+           RULES:
+           - Each (original, similar) pair must be compared ONLY ONCE.
+           - Do not repeat comparisons for the same addresses.
+           - Always provide it as a proper JSON object.
+           - Never pass it as a stringified blob.
+           Input: requires two separate Address objects:
              - 'original' (Address) → the address returned by getUserAddress(Person).
              - 'similar' (Address) → the address of a candidate user from the search results.
            Output: a numeric similarity score between 0.0 and 1.0, where 1.0 means identical.
