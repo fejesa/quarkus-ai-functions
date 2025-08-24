@@ -8,7 +8,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 
 @RegisterAiService
-public interface UserService {
+public interface AiUserService {
 
     @SystemMessage(
             """
@@ -17,7 +17,7 @@ public interface UserService {
             - If you cannot proceed because of missing data, STOP and return the last valid result.
 
             TERMINATION RULES
-            - If `searchUser` returns NOMATCH → you MUST IMMEDIATELY return that result as final output. Do NOT call any other tools. STOP IMMEDIATELY.
+            - If `searchUser` returns NONEMATCH → you MUST IMMEDIATELY return that result as final output. Do NOT call any other tools. STOP IMMEDIATELY.
             - If `searchUser` returns EXACTMATCH → you MUST IMMEDIATELY return that result as the final output. Do NOT call any other tools. STOP IMMEDIATELY.
             - If `searchUser` returns SIMILARMATCH → you are FORBIDDEN to stop.
              - You MUST continue the workflow:
@@ -27,6 +27,12 @@ public interface UserService {
                4. ONLY THEN construct and return the final JSON output.
              - Returning JSON without calling `getUserAddress` AND all `jaroWinklerSimilarity` calls is a violation of the rules.
 
+            FORBIDDEN BEHAVIOR
+            - After an EXACTMATCH or NONEMATCH result, it is strictly FORBIDDEN to:
+              * Call getUserAddress
+              * Call jaroWinklerSimilarity
+              * Invent any address data
+
             PARAMETER BINDING RULES
             - The very first tool call `searchUser` MUST always use `firstName`, `lastName`, and `birthDate` values DIRECTLY from the original input.
             - They `firstName`, `lastName`, and `birthDate` MUST NEVER be changed, corrected, reformatted, guessed, invented, replaced or substituted.
@@ -35,6 +41,7 @@ public interface UserService {
             - For similarity checks:
               - Always call `getUserAddress` ONCE with the original Person to get the baseline `original` address.
               - NEVER call `getUserAddress` for candidate users. Their addresses come only from the search result.
+              - NEVER call `getUserAddress` if `searchUser` returns EXACTMATCH.
               - For each candidate from the search result:
                 - Pass `original` = Person’s address (from getUserAddress)
                 - Pass `similar` = Candidate’s address (from search result)
@@ -70,7 +77,7 @@ public interface UserService {
             - Do not add markdown or extra fields.
             - Do not add fields like "message", "error", "code", "status", "result", "name" or any other keys.
             - The JSON must contain:
-             - "type": NOMATCH | EXACTMATCH | SIMILARMATCH
+             - "type": NONEMATCH | EXACTMATCH | SIMILARMATCH
              - "person": the original query Person object (firstName, lastName, birthDate) must ALWAYS be included, regardless of match type.
              - For EXACTMATCH:
                - `person` MUST be nested inside `user`.
@@ -81,6 +88,8 @@ public interface UserService {
                  - externalId: "UNKNOWN"
                  - score: 1.0
                  - explanation: "No explanation available"
+             - For NONEMATCH:
+               - No other fields except `type` and `person` are allowed.
              - If the `searchUser` result is SIMILARMATCH:
                - `person` MUST be nested inside the `user`.
                - Never output `person` as a top-level field in this case.
@@ -102,7 +111,7 @@ public interface UserService {
             WORKFLOW
             1. Always begin with `searchUser(firstName, lastName, birthDate)`.
             2. Based on result:
-              - NOMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
+              - NONEMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
               - EXACTMATCH → IMMEDIATELY stop and return the search result JSON object. Do NOT call any other tools afterwards, STOP and return the last valid result.
               - SIMILARMATCH → you are NOT ALLOWED to stop here.
                 * You MUST first call `getUserAddress` once.

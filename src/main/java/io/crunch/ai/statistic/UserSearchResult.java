@@ -14,7 +14,7 @@ import java.util.List;
 @JsonTypeIdResolver(UserSearchResultTypeIdResolver.class)
 public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesResult, ExactMatchResult {}
 
-@UserSearchResultSubType("NOMATCH")
+@UserSearchResultSubType("NONEMATCH")
 record NoMatchResult(Person person) implements UserSearchResult {}
 
 @UserSearchResultSubType("SIMILARMATCH")

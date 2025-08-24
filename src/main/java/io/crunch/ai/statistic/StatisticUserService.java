@@ -7,7 +7,6 @@ import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
-import java.util.Random;
 
 @ApplicationScoped
 public class StatisticUserService {
@@ -15,7 +14,7 @@ public class StatisticUserService {
     @Tool(name = "searchUser", value = {
         """
         THIS TOOL IS ALWAYS THE FIRST TOOL TO CALL.
-        - If the result type is NOMATCH or EXACTMATCH → YOU MUST RETURN IT IMMEDIATELY AS FINAL OUTPUT. DO NOT call any other tools afterwards.
+        - If the result type is NONEMATCH or EXACTMATCH → YOU MUST RETURN IT IMMEDIATELY AS FINAL OUTPUT. DO NOT call any other tools afterwards.
         - You must call this tool exactly once at the start of processing.
         - Never skip it.
 
@@ -33,7 +32,7 @@ public class StatisticUserService {
         - If external id does not defined, the result contains only the person data, and return the following JSON structure:
           Example:
           {
-           "type": "NOMATCH",
+           "type": "NONEMATCH",
            "person": {
              "firstName": <firstName>,
              "lastName": <lastName>,
@@ -117,26 +116,32 @@ public class StatisticUserService {
     })
     public UserSearchResult searchUser(String firstName, String lastName, String birthDate) {
         Log.info("Searching for user with query: firstName=" + firstName + ", lastName=" + lastName + ", birthDate=" + birthDate);
-        if ("NoMatch".equals(firstName)) {
-            // Simulate no match found
-            return new NoMatchResult(new Person(firstName, lastName, birthDate));
-        } else if ("ExactMatch".equals(firstName)) {
-            // Simulate exact match found
-            return new ExactMatchResult("My-Ext-123",
-                    new MatchUser(new Person(firstName, lastName, birthDate),
-                    new Address("Germany", "Berlin", "10115", "Street Name", new Random().nextInt(1, 100) + ""),
-                    1.0, "exact match, same person"));
-        } else {
-            // Simulate similar matches found
-            return new SimilarMatchesResult(List.of(
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Hamburg", "20095", "Sample Str.", "10"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Munich", "80331", "Another Str.", "11"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Cologne", "50667", "Different Str.", "12"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Frankfurt", "60311", "Other Str.", "13"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Stuttgart", "70173", "New Str.", "14"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Düsseldorf", "40213", "Old Str.", "15"), 0.0, ""),
-                    new MatchUser(new Person(firstName, lastName, birthDate), new Address("Germany", "Dortmund", "44135", "Main Str.", "16"), 0.0, "")
-            ));
-        }
+        List<StatisticUser> hits = StatisticUser.find("firstName = ?1 and lastName = ?2 and birthDate = ?3",
+                firstName,
+                lastName,
+                birthDate).list();
+        Log.info("Found " + hits.size() + " user(s) in statistic database");
+        return switch (hits.size()) {
+            case 0 -> toNoMatchResult(firstName, lastName, birthDate);
+            case 1 -> toExactMatchResult(hits);
+            default -> toSimilarMatchesResult(hits);
+        };
+    }
+
+    private SimilarMatchesResult toSimilarMatchesResult(List<StatisticUser> hits) {
+        return new SimilarMatchesResult(hits.stream().map(this::toMatchUser).toList());
+    }
+
+    private ExactMatchResult toExactMatchResult(List<StatisticUser> hits) {
+        return new ExactMatchResult(hits.getFirst().getExternalId(), toMatchUser(hits.getFirst()));
+    }
+
+    private NoMatchResult toNoMatchResult(String firstName, String lastName, String birthDate) {
+        return new NoMatchResult(new Person(firstName, lastName, birthDate));
+    }
+
+    private MatchUser toMatchUser(StatisticUser user) {
+        return new MatchUser(new Person(user.getFirstName(), user.getLastName(), user.getBirthDate()),
+                new Address(user.getCountry(), user.getCity(), user.getZipCode(), user.getStreet(), user.getHouseNumber()), 0.0, "");
     }
 }

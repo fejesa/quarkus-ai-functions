@@ -6,6 +6,8 @@ import io.crunch.ai.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.Optional;
+
 @ApplicationScoped
 public class InstituteUserService {
 
@@ -37,6 +39,18 @@ public class InstituteUserService {
     )
     public Address getUserAddress(Person person) {
         Log.info("Getting user address for person: " + person);
-        return new Address("123 Main St", "Springfield", "IL", "62701", "USA");
+        return getInstituteUser(person.firstName(), person.lastName(), person.birthDate())
+                .map(u -> new Address(u.getCountry(), u.getCity(), u.getZipCode(), u.getStreet(), u.getHouseNumber()))
+                .orElseThrow(() -> new NoInstituteUserFound("No user found for person: " + person));
+    }
+
+    public boolean isValidInstituteUser(String firstName, String lastName, String birthDate) {
+        return getInstituteUser(firstName, lastName, birthDate).isPresent();
+    }
+
+    private Optional<InstituteUser> getInstituteUser(String firstName, String lastName, String birthDate) {
+        return InstituteUser.find("firstName = ?1 and lastName = ?2 and birthDate = ?3", firstName, lastName, birthDate)
+                .singleResultOptional()
+                .map(e -> (InstituteUser) e);
     }
 }
