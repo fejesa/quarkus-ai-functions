@@ -8,6 +8,7 @@ import io.quarkus.logging.Log;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.RestResponse;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
@@ -18,23 +19,26 @@ public class InstituteUserResource {
 
     private final InstituteUserService instituteUserService;
 
-    public InstituteUserResource(AiUserService aiUserService, InstituteUserService instituteUserService) {
-        this.userService = aiUserService;
+    public InstituteUserResource(AiUserService userService, InstituteUserService instituteUserService) {
+        this.userService = userService;
         this.instituteUserService = instituteUserService;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public UserSearchResult search(@BeanParam @Valid UserSearchQuery query) {
+    public RestResponse<UserSearchResult> search(@BeanParam @Valid UserSearchQuery query) {
         Log.info("Received user search request: " + query);
         try {
             if (instituteUserService.isValidInstituteUser(query.firstName(), query.lastName(), query.birthDate())) {
                 var result = userService.search(query);
                 Log.info("User search result: " + result);
-                return new ObjectMapper().readValue(result, UserSearchResult.class);
+                return RestResponse.ResponseBuilder
+                        .ok(new ObjectMapper().readValue(result, UserSearchResult.class))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
             }
             Log.warn("No valid institute user found for person: " + query.firstName() + " " + query.lastName() + ", birthDate=" + query.birthDate());
-            throw new WebApplicationException("No valid institute user found for the given person", 400);
+            return RestResponse.notFound();
         } catch (JsonProcessingException e) {
             Log.error("Error processing user search request", e);
             throw new WebApplicationException("Failed to process user search request", e, 500);
