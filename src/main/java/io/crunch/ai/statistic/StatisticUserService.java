@@ -1,6 +1,8 @@
 package io.crunch.ai.statistic;
 
+import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.model.output.structured.Description;
 import io.crunch.ai.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -113,7 +115,9 @@ public class StatisticUserService {
          }
      """
     })
-    public UserSearchResult searchUser(String firstName, String lastName, String birthDate) {
+    public UserSearchResult searchUser(@P(value = "The user's first name", required = true) String firstName,
+                                       @P(value = "The user's last name", required = true) String lastName,
+                                       @P(value = "The user's birth date", required = true)  String birthDate) {
         Log.info("Searching for user with query: firstName=" + firstName + ", lastName=" + lastName + ", birthDate=" + birthDate);
         List<StatisticUser> hits = StatisticUser.find("person.firstName = ?1 and person.lastName = ?2 and person.birthDate = ?3",
                 firstName,

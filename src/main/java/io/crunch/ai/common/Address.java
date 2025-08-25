@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
+@Description("The user's address")
 public record Address(
         @Column(name = "country") @Description("The user's address country") @JsonProperty(required = true) String country,
         @Column(name = "city") @Description("The user's address city") @JsonProperty(required = true) String city,

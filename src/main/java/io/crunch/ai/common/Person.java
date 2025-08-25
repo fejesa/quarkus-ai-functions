@@ -5,6 +5,7 @@ import dev.langchain4j.model.output.structured.Description;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
+@Description("The user's personal information, for example, first name, last name, and birth date")
 @Embeddable
 public record Person(
         @Column(name = "first_name", nullable = false) @Description("The user's first name") @JsonProperty(required = true) String firstName,

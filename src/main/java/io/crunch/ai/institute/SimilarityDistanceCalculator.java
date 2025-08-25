@@ -1,5 +1,6 @@
 package io.crunch.ai.institute;
 
+import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import io.crunch.ai.common.Address;
 import io.quarkus.logging.Log;
@@ -28,7 +29,8 @@ public class SimilarityDistanceCalculator {
            Output: a numeric similarity score between 0.0 and 1.0, where 1.0 means identical.
        """
     )
-    public double jaroWinklerSimilarity(Address original, Address similar) {
+    public double jaroWinklerSimilarity(@P(value = "The user's address", required = true) Address original,
+                                        @P(value = "The address of a candidate user from the search results that should be compared", required = true) Address similar) {
         Log.info("Calculating the similarity between original address: " + original + " and similar address: " + similar);
         String normalized1 = normalize(original);
         String normalized2 = normalize(similar);

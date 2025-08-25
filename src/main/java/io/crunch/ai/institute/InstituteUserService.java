@@ -1,5 +1,6 @@
 package io.crunch.ai.institute;
 
+import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import io.crunch.ai.common.Address;
 import io.crunch.ai.common.Person;
@@ -37,7 +38,7 @@ public class InstituteUserService {
              - Passing null is a violation of the rules.
         """
     )
-    public Address getUserAddress(Person person) {
+    public Address getUserAddress(@P(value = "The person whose address should be fetched.", required = true) Person person) {
         Log.info("Getting user address for person: " + person);
         return getInstituteUser(person.firstName(), person.lastName(), person.birthDate())
                 .map(InstituteUser::getAddress)
