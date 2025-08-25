@@ -1,9 +1,8 @@
-package io.crunch.ai.statistic;
+package io.crunch.ai.function.statistic;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.model.output.structured.Description;
-import io.crunch.ai.common.Person;
+import io.crunch.ai.function.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 

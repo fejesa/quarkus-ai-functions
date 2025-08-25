@@ -1,9 +1,9 @@
-package io.crunch.ai.institute;
+package io.crunch.ai.function.institute;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.crunch.ai.statistic.UserSearchQuery;
-import io.crunch.ai.statistic.UserSearchResult;
+import io.crunch.ai.function.statistic.UserSearchQuery;
+import io.crunch.ai.function.statistic.UserSearchResult;
 import io.quarkus.logging.Log;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;

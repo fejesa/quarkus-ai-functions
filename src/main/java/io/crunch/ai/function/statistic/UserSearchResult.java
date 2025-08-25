@@ -1,12 +1,12 @@
-package io.crunch.ai.statistic;
+package io.crunch.ai.function.statistic;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DatabindContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase;
-import io.crunch.ai.common.Address;
-import io.crunch.ai.common.Person;
+import io.crunch.ai.function.common.Address;
+import io.crunch.ai.function.common.Person;
 
 import java.util.List;
 

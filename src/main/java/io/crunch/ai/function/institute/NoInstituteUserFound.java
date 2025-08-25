@@ -1,4 +1,4 @@
-package io.crunch.ai.institute;
+package io.crunch.ai.function.institute;
 
 public class NoInstituteUserFound extends RuntimeException {
 

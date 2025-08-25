@@ -1,8 +1,8 @@
-package io.crunch.ai.institute;
+package io.crunch.ai.function.institute;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
-import io.crunch.ai.common.Address;
+import io.crunch.ai.function.common.Address;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;

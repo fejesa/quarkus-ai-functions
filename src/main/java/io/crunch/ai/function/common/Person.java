@@ -1,4 +1,4 @@
-package io.crunch.ai.common;
+package io.crunch.ai.function.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.langchain4j.model.output.structured.Description;
