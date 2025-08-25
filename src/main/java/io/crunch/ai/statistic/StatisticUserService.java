@@ -1,7 +1,6 @@
 package io.crunch.ai.statistic;
 
 import dev.langchain4j.agent.tool.Tool;
-import io.crunch.ai.common.Address;
 import io.crunch.ai.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -116,7 +115,7 @@ public class StatisticUserService {
     })
     public UserSearchResult searchUser(String firstName, String lastName, String birthDate) {
         Log.info("Searching for user with query: firstName=" + firstName + ", lastName=" + lastName + ", birthDate=" + birthDate);
-        List<StatisticUser> hits = StatisticUser.find("firstName = ?1 and lastName = ?2 and birthDate = ?3",
+        List<StatisticUser> hits = StatisticUser.find("person.firstName = ?1 and person.lastName = ?2 and person.birthDate = ?3",
                 firstName,
                 lastName,
                 birthDate).list();
@@ -141,7 +140,6 @@ public class StatisticUserService {
     }
 
     private MatchUser toMatchUser(StatisticUser user) {
-        return new MatchUser(new Person(user.getFirstName(), user.getLastName(), user.getBirthDate()),
-                new Address(user.getCountry(), user.getCity(), user.getZipCode(), user.getStreet(), user.getHouseNumber()), 0.0, "");
+        return new MatchUser(user.getPerson(), user.getAddress(), 0.0, "");
     }
 }

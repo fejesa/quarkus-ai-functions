@@ -40,7 +40,7 @@ public class InstituteUserService {
     public Address getUserAddress(Person person) {
         Log.info("Getting user address for person: " + person);
         return getInstituteUser(person.firstName(), person.lastName(), person.birthDate())
-                .map(u -> new Address(u.getCountry(), u.getCity(), u.getZipCode(), u.getStreet(), u.getHouseNumber()))
+                .map(InstituteUser::getAddress)
                 .orElseThrow(() -> new NoInstituteUserFound("No user found for person: " + person));
     }
 
@@ -49,7 +49,7 @@ public class InstituteUserService {
     }
 
     private Optional<InstituteUser> getInstituteUser(String firstName, String lastName, String birthDate) {
-        return InstituteUser.find("firstName = ?1 and lastName = ?2 and birthDate = ?3", firstName, lastName, birthDate)
+        return InstituteUser.find("person.firstName = ?1 and person.lastName = ?2 and person.birthDate = ?3", firstName, lastName, birthDate)
                 .singleResultOptional()
                 .map(e -> (InstituteUser) e);
     }
