@@ -15,12 +15,12 @@ import org.jboss.resteasy.reactive.RestResponse;
 @Consumes(MediaType.APPLICATION_JSON)
 public class InstituteUserResource {
 
-    private final AiUserService userService;
+    private final AiUserSearchService userSearchService;
 
     private final InstituteUserService instituteUserService;
 
-    public InstituteUserResource(AiUserService userService, InstituteUserService instituteUserService) {
-        this.userService = userService;
+    public InstituteUserResource(AiUserSearchService userSearchService, InstituteUserService instituteUserService) {
+        this.userSearchService = userSearchService;
         this.instituteUserService = instituteUserService;
     }
 
@@ -30,7 +30,7 @@ public class InstituteUserResource {
         Log.info("Received user search request: " + query);
         try {
             if (instituteUserService.isValidInstituteUser(query.firstName(), query.lastName(), query.birthDate())) {
-                var result = userService.search(query);
+                var result = userSearchService.search(query);
                 Log.info("User search result: " + result);
                 return RestResponse.ResponseBuilder
                         .ok(new ObjectMapper().readValue(result, UserSearchResult.class))
