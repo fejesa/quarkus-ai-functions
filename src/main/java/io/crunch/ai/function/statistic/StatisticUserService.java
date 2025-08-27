@@ -5,6 +5,7 @@ import dev.langchain4j.agent.tool.Tool;
 import io.crunch.ai.function.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -114,6 +115,7 @@ public class StatisticUserService {
          }
      """
     })
+    @Transactional
     public UserSearchResult searchUser(@P(value = "The user's first name", required = true) String firstName,
                                        @P(value = "The user's last name", required = true) String lastName,
                                        @P(value = "The user's birth date", required = true)  String birthDate) {

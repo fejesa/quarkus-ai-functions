@@ -104,6 +104,12 @@
             <version>${ollama.testcontainer.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-testing-scorer-junit5</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

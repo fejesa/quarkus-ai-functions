@@ -6,8 +6,10 @@ import io.crunch.ai.function.statistic.StatisticUserService;
 import io.crunch.ai.function.statistic.UserSearchQuery;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @RegisterAiService
+@ApplicationScoped
 public interface UserSearchAssistant {
 
     @SystemMessage(

@@ -40,9 +40,11 @@ public class InstituteUserService {
     )
     public Address getUserAddress(@P(value = "The person whose address should be fetched.", required = true) Person person) {
         Log.info("Getting user address for person: " + person);
-        return getInstituteUser(person.firstName(), person.lastName(), person.birthDate())
-                .map(InstituteUser::getAddress)
-                .orElseThrow(() -> new NoInstituteUserFound("No user found for person: " + person));
+        return Optional.ofNullable(person)
+                    .map(p -> getInstituteUser(p.firstName(), p.lastName(), p.birthDate())
+                    .map(InstituteUser::getAddress)
+                    .orElseThrow(() -> new NoInstituteUserFound("No user found for person: " + person)))
+                .orElse(null);
     }
 
     public boolean isValidInstituteUser(String firstName, String lastName, String birthDate) {
