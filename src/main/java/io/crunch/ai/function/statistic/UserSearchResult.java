@@ -1,5 +1,6 @@
 package io.crunch.ai.function.statistic;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DatabindContext;
 import com.fasterxml.jackson.databind.JavaType;
@@ -10,6 +11,7 @@ import io.crunch.ai.function.common.Person;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonTypeIdResolver(UserSearchResultTypeIdResolver.class)
@@ -19,12 +21,24 @@ public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesRe
 record NoMatchResult(Person person) implements UserSearchResult {}
 
 @UserSearchResultSubType("SIMILARMATCH")
-record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {}
+record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SimilarMatchesResult(List<MatchUser> similars))) return false;
+        return Objects.equals(Set.copyOf(users), Set.copyOf(similars));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(users);
+    }
+}
 
 @UserSearchResultSubType("EXACTMATCH")
 record ExactMatchResult(MatchUser user) implements UserSearchResult {}
 
-record MatchUser(Person person, Address address, Double score, String explanation, String externalId) {
+record MatchUser(Person person, Address address, @JsonAlias({"score", "similarityScore"}) Double score, String explanation, String externalId) {
     /**
      * Two MatchUser objects are considered equal if only their person, address, and externalId fields are equal.
      * The score and explanation fields are ignored in the equality check.
@@ -32,7 +46,9 @@ record MatchUser(Person person, Address address, Double score, String explanatio
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof MatchUser matchUser)) return false;
-        return Objects.equals(person, matchUser.person) && Objects.equals(address, matchUser.address) && Objects.equals(externalId, matchUser.externalId);
+        return Objects.equals(person, matchUser.person)
+                && Objects.equals(address, matchUser.address)
+                && Objects.equals(externalId, matchUser.externalId);
     }
 
     @Override
