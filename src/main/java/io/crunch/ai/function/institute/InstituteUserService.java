@@ -6,6 +6,7 @@ import io.crunch.ai.function.common.Address;
 import io.crunch.ai.function.common.Person;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ public class InstituteUserService {
              - Passing null is a violation of the rules.
         """
     )
+    @Transactional
     public Address getUserAddress(@P(value = "The person whose address should be fetched.", required = true) Person person) {
         Log.info("Getting user address for person: " + person);
         return getInstituteUser(person.firstName(), person.lastName(), person.birthDate())
