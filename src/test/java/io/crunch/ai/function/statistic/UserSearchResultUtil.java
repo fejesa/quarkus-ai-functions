@@ -13,24 +13,24 @@ public class UserSearchResultUtil {
         return new ObjectMapper().writeValueAsString(noneMatch(person));
     }
 
-    public static String exactMatchAsString(String externalId, MatchUser matchUser) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(exactMatch(externalId, matchUser));
+    public static String exactMatchAsString(MatchUser matchUser) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(exactMatch(matchUser));
     }
 
     public static Person person(String firstName, String lastName, String birthDate) {
         return new Person(firstName, lastName, birthDate);
     }
 
-    private static UserSearchResult exactMatch(String externalId, MatchUser matchUser) {
-        return new ExactMatchResult(externalId, matchUser);
+    private static UserSearchResult exactMatch(MatchUser matchUser) {
+        return new ExactMatchResult(matchUser);
     }
 
     public static Address address(String country, String city, String zipCode, String street, String houseNumber) {
         return new Address(country, city, zipCode, street, houseNumber);
     }
 
-    public static MatchUser matchUser(Person person, Address address, double score, String explanation) {
-        return new MatchUser(person, address, score, explanation);
+    public static MatchUser matchUser(Person person, Address address, double score, String explanation, String externalId) {
+        return new MatchUser(person, address, score, explanation, externalId);
     }
 
     private static UserSearchResult noneMatch(Person person) {

@@ -23,33 +23,32 @@ class UserSearchAssistantTest {
     UserSearchAssistant userSearchAssistant;
 
     @Test
-    void scoreSearch(@ScorerConfiguration Scorer scorer) throws JsonProcessingException {
+    void scoreSearch(@ScorerConfiguration(concurrency = 2) Scorer scorer) throws JsonProcessingException {
         Samples<String> samples = new Samples<>(
-                EvaluationSample.<String>builder()
-                    .withName("NoneMatch")
-                    .withParameter(new NamedParameter("firstName", "Alice"))
-                    .withParameter(new NamedParameter("lastName", "Johnson"))
-                    .withParameter(new NamedParameter("birthDate", "1990-05-21"))
-                    .withExpectedOutput(
-                            nonMatchAsString(person("Alice", "Johnson", "1990-05-21"))).build(),
-                EvaluationSample.<String>builder()
-                        .withName("ExactMatch")
-                        .withParameter(new NamedParameter("firstName", "Clara"))
-                        .withParameter(new NamedParameter("lastName", "Meier"))
-                        .withParameter(new NamedParameter("birthDate", "2000-07-21"))
-                        .withParameter(new NamedParameter("country", "Germany"))
-                        .withParameter(new NamedParameter("city", "Hamburg"))
-                        .withParameter(new NamedParameter("zipCode", "20095"))
-                        .withParameter(new NamedParameter("street", "Sample Str."))
-                        .withParameter(new NamedParameter("houseNumber", "10"))
-                        .withParameter(new NamedParameter("externalId", "EXT-1001"))
-                        .withParameter(new NamedParameter("explanation", ""))
-                        .withExpectedOutput(
-                            exactMatchAsString("EXT-1001",
-                                matchUser(
-                                    person("Clara", "Meier", "2000-07-21"),
-                                    address("Germany", "Hamburg", "20095", "Sample Str.", "10"),
-                                    1.0, "No explanation available"))).build()
+            EvaluationSample.<String>builder()
+                .withName("NoneMatch")
+                .withParameter(new NamedParameter("firstName", "Alice"))
+                .withParameter(new NamedParameter("lastName", "Johnson"))
+                .withParameter(new NamedParameter("birthDate", "1990-05-21"))
+                .withExpectedOutput(
+                        nonMatchAsString(person("Alice", "Johnson", "1990-05-21"))).build(),
+            EvaluationSample.<String>builder()
+                .withName("ExactMatch")
+                .withParameter(new NamedParameter("firstName", "Clara"))
+                .withParameter(new NamedParameter("lastName", "Meier"))
+                .withParameter(new NamedParameter("birthDate", "2000-07-21"))
+                .withParameter(new NamedParameter("country", "Germany"))
+                .withParameter(new NamedParameter("city", "Hamburg"))
+                .withParameter(new NamedParameter("zipCode", "20095"))
+                .withParameter(new NamedParameter("street", "Sample Str."))
+                .withParameter(new NamedParameter("houseNumber", "10"))
+                .withParameter(new NamedParameter("externalId", "EXT-1001"))
+                .withParameter(new NamedParameter("explanation", ""))
+                .withExpectedOutput(
+                    exactMatchAsString(matchUser(
+                            person("Clara", "Meier", "2000-07-21"),
+                            address("Germany", "Hamburg", "20095", "Sample Str.", "10"),
+                            1.0, "No explanation available", "EXT-1001"))).build()
         );
 
         var strategy = new UserSearchEvaluationStrategy();

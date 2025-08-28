@@ -1,12 +1,10 @@
 package io.crunch.ai.function.institute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.crunch.ai.function.OllamaTestResource;
 import io.crunch.ai.function.common.Address;
 import io.crunch.ai.function.common.Person;
 import io.crunch.ai.function.statistic.StatisticUserService;
 import io.crunch.ai.function.statistic.UserSearchResult;
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import jakarta.ws.rs.core.MediaType;
@@ -23,7 +21,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
-@QuarkusTestResource(OllamaTestResource.class)
 class InstituteUserResourceTest {
 
     @InjectSpy
@@ -99,7 +96,6 @@ class InstituteUserResourceTest {
 
     @Test
     void whenMultipleStatisticUserFoundThenReturnsSimilarMatches() {
-        // 1982-04-08 lastName==Weber firstName==Peter
         await()
             .atMost(1, MINUTES)
             .pollInterval(Durations.FIVE_SECONDS)

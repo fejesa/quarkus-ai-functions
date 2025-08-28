@@ -133,18 +133,18 @@ public class StatisticUserService {
     }
 
     private SimilarMatchesResult toSimilarMatchesResult(List<StatisticUser> hits) {
-        return new SimilarMatchesResult(hits.stream().map(this::toMatchUser).toList());
+        return new SimilarMatchesResult(hits.stream().map(u -> toMatchUser(u, "")).toList());
     }
 
     private ExactMatchResult toExactMatchResult(List<StatisticUser> hits) {
-        return new ExactMatchResult(hits.getFirst().getExternalId(), toMatchUser(hits.getFirst()));
+        return new ExactMatchResult(toMatchUser(hits.getFirst(), hits.getFirst().getExternalId()));
     }
 
     private NoMatchResult toNoMatchResult(String firstName, String lastName, String birthDate) {
         return new NoMatchResult(new Person(firstName, lastName, birthDate));
     }
 
-    private MatchUser toMatchUser(StatisticUser user) {
-        return new MatchUser(user.getPerson(), user.getAddress(), 0.0, "");
+    private MatchUser toMatchUser(StatisticUser user, String externalId) {
+        return new MatchUser(user.getPerson(), user.getAddress(), 0.0, "", externalId);
     }
 }
