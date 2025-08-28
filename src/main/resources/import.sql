@@ -51,9 +51,9 @@ INSERT INTO institute_user (id, first_name, last_name, birth_date, country, city
 VALUES (nextval('institute_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'Germany', 'Berlin', '10117', 'Unter den Linden', '77');
 -- Variants in statistic_user
 INSERT INTO statistic_user (id, first_name, last_name, birth_date, external_id, country, city, zip_code, street, house_number) VALUES
-   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT101', 'Germany', 'Berlin', '10117', 'Unter den Linden', '78'), -- house no diff
-   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT104', 'Germany', 'Potsdam', '10117', 'Unter den Linden', '77'), -- city diff
-   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT105', 'Austria', 'Vienna', '10117', 'Unter den Linden', '77'); -- country diff
+   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT101', 'Germany', 'Berlin', '10117', 'Mozart strasse', '78A'), -- house no diff
+   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT104', 'Germany', 'Potsdam', '10117', 'Unter den Linden', '56'), -- city diff
+   (nextval('statistic_user_seq'), 'Anna', 'Schmidt', '1993-09-12', 'EXT105', 'Austria', 'Vienna', '10117', 'Unter den Linden', '13'); -- country diff
 
 -- Person B: Peter Weber
 INSERT INTO institute_user (id, first_name, last_name, birth_date, country, city, zip_code, street, house_number)

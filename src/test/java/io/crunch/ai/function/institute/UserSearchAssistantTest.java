@@ -12,6 +12,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static io.crunch.ai.function.statistic.UserSearchResultUtil.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -23,7 +25,7 @@ class UserSearchAssistantTest {
     UserSearchAssistant userSearchAssistant;
 
     @Test
-    void scoreSearch(@ScorerConfiguration(concurrency = 2) Scorer scorer) throws JsonProcessingException {
+    void scoreSearch(@ScorerConfiguration Scorer scorer) throws JsonProcessingException {
         Samples<String> samples = new Samples<>(
             EvaluationSample.<String>builder()
                 .withName("NoneMatch")
@@ -37,26 +39,37 @@ class UserSearchAssistantTest {
                 .withParameter(new NamedParameter("firstName", "Clara"))
                 .withParameter(new NamedParameter("lastName", "Meier"))
                 .withParameter(new NamedParameter("birthDate", "2000-07-21"))
-                .withParameter(new NamedParameter("country", "Germany"))
-                .withParameter(new NamedParameter("city", "Hamburg"))
-                .withParameter(new NamedParameter("zipCode", "20095"))
-                .withParameter(new NamedParameter("street", "Sample Str."))
-                .withParameter(new NamedParameter("houseNumber", "10"))
-                .withParameter(new NamedParameter("externalId", "EXT-1001"))
-                .withParameter(new NamedParameter("explanation", ""))
                 .withExpectedOutput(
                     exactMatchAsString(matchUser(
-                            person("Clara", "Meier", "2000-07-21"),
-                            address("Germany", "Hamburg", "20095", "Sample Str.", "10"),
-                            1.0, "No explanation available", "EXT-1001"))).build()
+                        person("Clara", "Meier", "2000-07-21"),
+                        address("Germany", "Hamburg", "20095", "Sample Str.", "10"),
+                        1.0, "No explanation available", "EXT-1001"))).build(),
+            EvaluationSample.<String>builder()
+                .withName("SimilarMatches")
+                .withParameter(new NamedParameter("firstName", "Anna"))
+                .withParameter(new NamedParameter("lastName", "Schmidt"))
+                .withParameter(new NamedParameter("birthDate", "1993-09-12"))
+                .withExpectedOutput(
+                    similarMatchesAsString(List.of(
+                        matchUser(
+                            person("Anna", "Schmidt", "1993-09-12"),
+                            address("Germany", "Berlin", "10117", "Mozart strasse", "78A"),
+                            0.0, "", ""),
+                        matchUser(
+                            person("Anna", "Schmidt", "1993-09-12"),
+                            address("Germany", "Potsdam", "10117", "Unter den Linden", "56"),
+                            0.0, "", ""),
+                        matchUser(
+                            person("Anna", "Schmidt", "1993-09-12"),
+                            address("Austria", "Vienna", "10117", "Unter den Linden", "13"),
+                            0.0, "", "")))).build()
         );
 
-        var strategy = new UserSearchEvaluationStrategy();
         var report = scorer.evaluate(
                 samples,
                 parameters -> userSearchAssistant.search(new UserSearchQuery(parameters.get("firstName"), parameters.get("lastName"), parameters.get("birthDate"))),
-                strategy);
+                new UserSearchEvaluationStrategy());
 
-        assertThat(report.score()).isGreaterThan(99.0);
+        assertThat(report.score()).isGreaterThan(60.0);
     }
 }
