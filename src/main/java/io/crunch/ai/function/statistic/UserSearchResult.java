@@ -13,13 +13,54 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Represents the result of a user search in the statistics service.
+ * <p>
+ * This sealed interface defines a polymorphic hierarchy of possible outcomes
+ * when querying users. It is annotated with Jackson’s {@link JsonTypeInfo} to
+ * allow polymorphic serialization and deserialization, using a custom
+ * {@link UserSearchResultTypeIdResolver}.
+ * <p>
+ * The type of result is discriminated by the {@code type} property in the JSON payload:
+ * <ul>
+ *   <li>{@code NONEMATCH} → {@link NoMatchResult}</li>
+ *   <li>{@code SIMILARMATCH} → {@link SimilarMatchesResult}</li>
+ *   <li>{@code EXACTMATCH} → {@link ExactMatchResult}</li>
+ * </ul>
+ *
+ * <h2>Design Notes</h2>
+ * <ul>
+ *   <li>Jackson polymorphic handling is fully explicit and type-safe.</li>
+ *   <li>The sealed interface ensures only the three permitted subclasses can represent search results.</li>
+ *   <li>The type IDs are controlled via {@link UserSearchResultSubType} annotations on the subtypes.</li>
+ * </ul>
+ */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonTypeIdResolver(UserSearchResultTypeIdResolver.class)
 public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesResult, ExactMatchResult {}
 
+/**
+ * Represents the case where no user matches the given search criteria.
+ * <p>
+ * Contains only the original {@link Person} query that was used for the lookup.
+ */
 @UserSearchResultSubType("NONEMATCH")
 record NoMatchResult(Person person) implements UserSearchResult {}
 
+/**
+ * Represents the case where multiple users are similar to the query but none is an exact match.
+ * <p>
+ * Contains a list of {@link MatchUser} candidates. The equality semantics are
+ * defined in a set-like manner: two {@code SimilarMatchesResult} instances are
+ * considered equal if they contain the same set of users, regardless of order.
+ *
+ * <h2>Equality Contract</h2>
+ * <ul>
+ *   <li>Order of users in the list does not matter.</li>
+ *   <li>Duplicates are collapsed by using {@link Set#copyOf(List)} internally.</li>
+ *   <li>{@link MatchUser#equals(Object)} defines equality between candidates.</li>
+ * </ul>
+ */
 @UserSearchResultSubType("SIMILARMATCH")
 record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {
 
@@ -35,9 +76,34 @@ record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {
     }
 }
 
+/**
+ * Represents the case where exactly one user matches the query.
+ * <p>
+ * Contains the matched {@link MatchUser} entry.
+ */
 @UserSearchResultSubType("EXACTMATCH")
 record ExactMatchResult(MatchUser user) implements UserSearchResult {}
 
+/**
+ * Represents a single user candidate in a search result.
+ * <p>
+ * Each match contains:
+ * <ul>
+ *   <li>{@link Person} → the person’s identifying attributes (first name, last name, birth date).</li>
+ *   <li>{@link Address} → the associated address of the user.</li>
+ *   <li>{@code score} → similarity score, may be provided under multiple aliases
+ *       (JSON properties {@code score} or {@code similarityScore}).</li>
+ *   <li>{@code explanation} → human-readable reasoning why this candidate was matched.</li>
+ *   <li>{@code externalId} → stable system identifier for this user.</li>
+ * </ul>
+ *
+ * <h2>Equality Contract</h2>
+ * <ul>
+ *   <li>Only {@code person}, {@code address}, and {@code externalId} are considered.</li>
+ *   <li>{@code score} and {@code explanation} are explicitly ignored in equality checks.</li>
+ *   <li>This design allows different similarity computations to be compared consistently.</li>
+ * </ul>
+ */
 record MatchUser(Person person, Address address, @JsonAlias({"score", "similarityScore"}) Double score, String explanation, String externalId) {
     /**
      * Two MatchUser objects are considered equal if only their person, address, and externalId fields are equal.
@@ -57,6 +123,26 @@ record MatchUser(Person person, Address address, @JsonAlias({"score", "similarit
     }
 }
 
+/**
+ * Custom Jackson type ID resolver for {@link UserSearchResult}.
+ * <p>
+ * This resolver maps between the {@code type} property in JSON and the concrete
+ * Java subtype. It uses the {@link UserSearchResultSubType} annotation on each
+ * permitted subclass to determine the type identifier.
+ *
+ * <h2>Behavior</h2>
+ * <ul>
+ *   <li>{@link #idFromValue(Object)} returns the annotation value of the current class.</li>
+ *   <li>{@link #typeFromId(DatabindContext, String)} performs the inverse mapping by
+ *       scanning permitted subclasses of {@link UserSearchResult} and matching their
+ *       {@link UserSearchResultSubType} value.</li>
+ *   <li>Unknown type IDs will result in an {@link IllegalArgumentException}.</li>
+ * </ul>
+ *
+ * <h2>Mechanism</h2>
+ * This resolver enforces a strict, annotation-driven mapping instead of relying
+ * on class names or defaults, making the serialization contract stable and explicit.
+ */
 class UserSearchResultTypeIdResolver extends TypeIdResolverBase {
 
     @Override

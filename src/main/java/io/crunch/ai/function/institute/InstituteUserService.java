@@ -10,6 +10,44 @@ import jakarta.transaction.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Service responsible for retrieving and validating institute user information.
+ * <p>
+ * This class integrates with the LangChain4j tool system, exposing a tool
+ * ({@link #getUserAddress(Person)}) that provides the original query person's
+ * full {@link Address} for similarity-based matching flows.
+ * </p>
+ *
+ * <h2>Key Responsibilities</h2>
+ * <ul>
+ *   <li>Expose the {@code getUserAddress} tool for retrieving the original person's address.</li>
+ *   <li>Enforce business rules regarding when and how this tool should be invoked in similarity match flows.</li>
+ *   <li>Provide validation methods to check if a given person exists in the institute's records.</li>
+ *   <li>Encapsulate the retrieval logic of {@link InstituteUser} entities from the persistence layer.</li>
+ * </ul>
+ *
+ * <h2>LangChain4j Integration</h2>
+ * The {@code getUserAddress} method is annotated as a {@link Tool}, making it available
+ * to the model during reasoning. It is strictly used to retrieve the "original" user's address
+ * and must <strong>never</strong> be used for candidate users.
+ *
+ * <h2>Rules Enforced in the Tool</h2>
+ * <ul>
+ *   <li>If a {@code SIMILARMATCH} result is returned, this tool <strong>must</strong> be called exactly once.</li>
+ *   <li>The final output must not be generated until this tool has been invoked and its result
+ *       integrated into similarity comparisons.</li>
+ *   <li>Candidate user addresses are never retrieved through this tool; they come directly from the search results.</li>
+ *   <li>The input {@link Person} must not be {@code null} or empty.</li>
+ * </ul>
+ *
+ * <h2>Transactional Behavior</h2>
+ * The {@code getUserAddress} method is transactional and ensures database operations are
+ * executed within a transaction boundary. By default, it is not necessary to annotate, but some test scenarios require it.
+ *
+ * @see Person
+ * @see Address
+ * @see InstituteUser
+ */
 @ApplicationScoped
 public class InstituteUserService {
 

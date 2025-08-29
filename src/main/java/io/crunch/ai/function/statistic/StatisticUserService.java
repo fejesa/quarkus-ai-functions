@@ -9,6 +9,98 @@ import jakarta.transaction.Transactional;
 
 import java.util.List;
 
+/**
+ * Service class that integrates with the {@code StatisticUser} repository and provides
+ * an AI-tool-enabled entry point for searching users in the statistic database.
+ * <p>
+ * This class is exposed as an AI Tool via {@link Tool} annotation under the name {@code searchUser}.
+ * It is intended to be the very first step in any AI-driven person resolution workflow
+ * (see {@code RULES} in the {@link Tool} description). All downstream resolution logic
+ * (e.g., fetching original addresses, running similarity checks) depends on the result of this call.
+ *
+ * <h2>Usage Rules for {@code searchUser}</h2>
+ * <ul>
+ *   <li><b>Mandatory First Call:</b> This tool must always be called first. Skipping it violates the contract.</li>
+ *   <li><b>Finalization Cases:</b>
+ *     <ul>
+ *       <li>If the result type is {@code NONEMATCH} → return it immediately as the final output.</li>
+ *       <li>If the result type is {@code EXACTMATCH} → return it immediately as the final output.</li>
+ *     </ul>
+ *   </li>
+ *   <li><b>Person Input:</b>
+ *     <ul>
+ *       <li>{@code firstName}, {@code lastName}, and {@code birthDate} must be passed <i>exactly as received</i>.</li>
+ *       <li>No normalization, correction, invention, or substitution is allowed, even if the input looks malformed.</li>
+ *     </ul>
+ *   </li>
+ *   <li><b>Result Handling:</b>
+ *     <ul>
+ *       <li>All results must be returned as valid JSON objects with the exact field structure specified.</li>
+ *       <li>No explanatory text should be added outside the JSON.</li>
+ *       <li>Required fields such as {@code externalId}, {@code score}, and {@code explanation} must always be present (never null or missing).</li>
+ *     </ul>
+ *   </li>
+ * </ul>
+ *
+ * <h2>Possible Result Types</h2>
+ * <ol>
+ *   <li>
+ *     <b>NONEMATCH</b> — No matching user found.
+ *     <pre>
+ *     {
+ *       "type": "NONEMATCH",
+ *       "person": {
+ *         "firstName": "John",
+ *         "lastName": "Doe",
+ *         "birthDate": "1980-01-01"
+ *       }
+ *     }
+ *     </pre>
+ *   </li>
+ *
+ *   <li>
+ *     <b>EXACTMATCH</b> — Exactly one matching user found.
+ *     <ul>
+ *       <li>The {@code person} object must be nested inside {@code user}.</li>
+ *       <li>{@code externalId}, {@code score}, and {@code explanation} must always be provided.</li>
+ *     </ul>
+ *     <pre>
+ *     {
+ *       "type": "EXACTMATCH",
+ *       "externalId": "12345",
+ *       "user": {
+ *         "person": { ... },
+ *         "address": { ... },
+ *         "score": 1.0,
+ *         "explanation": "Exact match found"
+ *       }
+ *     }
+ *     </pre>
+ *   </li>
+ *
+ *   <li>
+ *     <b>SIMILARMATCH</b> — Multiple similar users found.
+ *     <ul>
+ *       <li>Returned as a JSON array under {@code users}.</li>
+ *       <li>No {@code externalId} at the top level.</li>
+ *     </ul>
+ *     <pre>
+ *     {
+ *       "type": "SIMILARMATCH",
+ *       "users": [
+ *         {
+ *           "person": { ... },
+ *           "address": { ... },
+ *           "score": 0.85,
+ *           "explanation": "High similarity on name, different city"
+ *         },
+ *         { ... }
+ *       ]
+ *     }
+ *     </pre>
+ *   </li>
+ * </ol>
+ */
 @ApplicationScoped
 public class StatisticUserService {
 

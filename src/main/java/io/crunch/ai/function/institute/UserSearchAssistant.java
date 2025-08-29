@@ -8,6 +8,79 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import jakarta.enterprise.context.ApplicationScoped;
 
+/**
+ * {@code UserSearchAssistant} defines an AI-powered assistant service for
+ * retrieving and validating user information from multiple data sources,
+ * using {@link StatisticUserService}, {@link InstituteUserService}, and
+ * {@link SimilarityDistanceCalculator} as external tools.
+ *
+ * <p>This service is registered as an AI service via {@link RegisterAiService},
+ * and it is application-scoped, meaning it is a singleton within the
+ * application context.</p>
+ *
+ * <h2>Responsibilities</h2>
+ * <ul>
+ *   <li>Initiates a user search against the {@link StatisticUserService} with
+ *   the query parameters {@code firstName}, {@code lastName}, and {@code birthDate}.</li>
+ *   <li>Evaluates the search outcome and enforces strict workflow rules for:
+ *     <ul>
+ *       <li>{@code NONEMATCH} → terminate immediately, return the result as-is.</li>
+ *       <li>{@code EXACTMATCH} → terminate immediately, return the result as-is.</li>
+ *       <li>{@code SIMILARMATCH} → continue processing:
+ *         <ol>
+ *           <li>Fetch the original user’s address once using {@link InstituteUserService#getUserAddress}.</li>
+ *           <li>For each candidate returned by the search, compare its address with the original using {@link SimilarityDistanceCalculator#jaroWinklerSimilarity}.</li>
+ *           <li>Include similarity scores and structured natural-language explanations for all candidates.</li>
+ *           <li>Return a final JSON response with type {@code SIMILARMATCH}, enriched with similarity details.</li>
+ *         </ol>
+ *       </li>
+ *     </ul>
+ *   </li>
+ * </ul>
+ *
+ * <h2>System Message Enforcement</h2>
+ * The embedded {@link SystemMessage} contains detailed rules and restrictions
+ * that the AI assistant must always follow. These include:
+ * <ul>
+ *   <li>No repeated tool calls with the same input.</li>
+ *   <li>Mandatory termination behavior based on search result type.</li>
+ *   <li>Strict parameter binding: the original {@code firstName}, {@code lastName},
+ *   and {@code birthDate} must never be modified, reformatted, or substituted.</li>
+ *   <li>Prohibited behaviors (e.g., calling similarity tools after an EXACTMATCH,
+ *   or inventing address data).</li>
+ *   <li>Mandatory JSON object formatting for tool parameters (never as strings).</li>
+ *   <li>Detailed explanation rules for similarity scoring (must cover all five
+ *   address fields: country, city, zipCode, street, houseNumber).</li>
+ * </ul>
+ *
+ * <h2>Output Specification</h2>
+ * The assistant always produces a JSON object that contains:
+ * <ul>
+ *   <li>{@code type}: one of NONEMATCH | EXACTMATCH | SIMILARMATCH</li>
+ *   <li>{@code person}: the original query person object, always included.</li>
+ *   <li>For EXACTMATCH results: mandatory fields {@code externalId}, {@code score},
+ *   and {@code explanation} must be provided (with fallbacks if unavailable).</li>
+ *   <li>For SIMILARMATCH results: similarity scores, field-level comparisons,
+ *   and short interpretation summaries for each candidate.</li>
+ * </ul>
+ *
+ * <h2>Tool Integration</h2>
+ * <ul>
+ *   <li>{@link StatisticUserService} → performs the initial user search.</li>
+ *   <li>{@link InstituteUserService} → fetches the original user’s canonical address.</li>
+ *   <li>{@link SimilarityDistanceCalculator} → computes address similarity scores.</li>
+ * </ul>
+ *
+ * <h2>Usage</h2>
+ * Clients provide a {@link UserSearchQuery} containing the user’s
+ * {@code firstName}, {@code lastName}, and {@code birthDate}. The assistant
+ * orchestrates the appropriate workflow, strictly following the system rules,
+ * and produces a normalized JSON output suitable for downstream processing.
+ *
+ * @see StatisticUserService
+ * @see InstituteUserService
+ * @see SimilarityDistanceCalculator
+ */
 @RegisterAiService
 @ApplicationScoped
 public interface UserSearchAssistant {
