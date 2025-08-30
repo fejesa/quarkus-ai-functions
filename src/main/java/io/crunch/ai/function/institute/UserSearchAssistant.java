@@ -5,6 +5,7 @@ import dev.langchain4j.service.UserMessage;
 import io.crunch.ai.function.statistic.StatisticUserService;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
@@ -196,5 +197,6 @@ public interface UserSearchAssistant {
         """
     )
     @ToolBox({StatisticUserService.class, InstituteUserService.class, SimilarityDistanceCalculator.class})
+    @OutputGuardrails(UserSearchOutputGuardrail.class)
     String search(@UserMessage UserSearchQuery userSearchQuery);
 }

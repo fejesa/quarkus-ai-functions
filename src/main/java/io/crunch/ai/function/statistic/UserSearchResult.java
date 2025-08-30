@@ -1,7 +1,6 @@
 package io.crunch.ai.function.statistic;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DatabindContext;
 import com.fasterxml.jackson.databind.JavaType;
@@ -46,7 +45,6 @@ public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesRe
  * Contains only the original {@link Person} query that was used for the lookup.
  */
 @UserSearchResultSubType("NONEMATCH")
-@JsonIgnoreProperties(ignoreUnknown = true)
 record NoMatchResult(Person person) implements UserSearchResult {}
 
 /**
@@ -64,7 +62,6 @@ record NoMatchResult(Person person) implements UserSearchResult {}
  * </ul>
  */
 @UserSearchResultSubType("SIMILARMATCH")
-@JsonIgnoreProperties(ignoreUnknown = true)
 record SimilarMatchesResult(@JsonAlias({"similarUsers", "users", "candidates"}) List<MatchUser> users) implements UserSearchResult {
 
     public SimilarMatchesResult {
@@ -91,7 +88,6 @@ record SimilarMatchesResult(@JsonAlias({"similarUsers", "users", "candidates"}) 
  * Contains the matched {@link MatchUser} entry.
  */
 @UserSearchResultSubType("EXACTMATCH")
-@JsonIgnoreProperties(ignoreUnknown = true)
 record ExactMatchResult(MatchUser user) implements UserSearchResult {}
 
 /**
@@ -114,7 +110,6 @@ record ExactMatchResult(MatchUser user) implements UserSearchResult {}
  *   <li>This design allows different similarity computations to be compared consistently.</li>
  * </ul>
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 record MatchUser(Person person, Address address, @JsonAlias({"score", "similarityScore"}) Double score, String explanation, String externalId) {
 
     public MatchUser {
@@ -123,9 +118,6 @@ record MatchUser(Person person, Address address, @JsonAlias({"score", "similarit
         }
         if (address == null) {
             throw new IllegalArgumentException("Address must not be null");
-        }
-        if (externalId == null) {
-            throw new IllegalArgumentException("ExternalId must not be null");
         }
     }
 
