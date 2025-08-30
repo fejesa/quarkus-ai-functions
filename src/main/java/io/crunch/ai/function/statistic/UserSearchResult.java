@@ -1,6 +1,7 @@
 package io.crunch.ai.function.statistic;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.DatabindContext;
 import com.fasterxml.jackson.databind.JavaType;
@@ -45,6 +46,7 @@ public sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesRe
  * Contains only the original {@link Person} query that was used for the lookup.
  */
 @UserSearchResultSubType("NONEMATCH")
+@JsonIgnoreProperties(ignoreUnknown = true)
 record NoMatchResult(Person person) implements UserSearchResult {}
 
 /**
@@ -62,12 +64,19 @@ record NoMatchResult(Person person) implements UserSearchResult {}
  * </ul>
  */
 @UserSearchResultSubType("SIMILARMATCH")
-record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {
+@JsonIgnoreProperties(ignoreUnknown = true)
+record SimilarMatchesResult(@JsonAlias({"similarUsers", "users", "candidates"}) List<MatchUser> users) implements UserSearchResult {
+
+    public SimilarMatchesResult {
+        if (users == null || users.isEmpty()) {
+            throw new IllegalArgumentException("Users list must not be null or empty");
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof SimilarMatchesResult(List<MatchUser> similars))) return false;
-        return Objects.equals(Set.copyOf(users), Set.copyOf(similars));
+        return users != null && Objects.equals(Set.copyOf(users), Set.copyOf(similars));
     }
 
     @Override
@@ -82,6 +91,7 @@ record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {
  * Contains the matched {@link MatchUser} entry.
  */
 @UserSearchResultSubType("EXACTMATCH")
+@JsonIgnoreProperties(ignoreUnknown = true)
 record ExactMatchResult(MatchUser user) implements UserSearchResult {}
 
 /**
@@ -104,7 +114,21 @@ record ExactMatchResult(MatchUser user) implements UserSearchResult {}
  *   <li>This design allows different similarity computations to be compared consistently.</li>
  * </ul>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 record MatchUser(Person person, Address address, @JsonAlias({"score", "similarityScore"}) Double score, String explanation, String externalId) {
+
+    public MatchUser {
+        if (person == null) {
+            throw new IllegalArgumentException("Person must not be null");
+        }
+        if (address == null) {
+            throw new IllegalArgumentException("Address must not be null");
+        }
+        if (externalId == null) {
+            throw new IllegalArgumentException("ExternalId must not be null");
+        }
+    }
+
     /**
      * Two MatchUser objects are considered equal if only their person, address, and externalId fields are equal.
      * The score and explanation fields are ignored in the equality check.
