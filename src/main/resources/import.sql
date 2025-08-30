@@ -57,11 +57,11 @@ INSERT INTO statistic_user (id, first_name, last_name, birth_date, external_id, 
 
 -- Person B: Peter Weber
 INSERT INTO institute_user (id, first_name, last_name, birth_date, country, city, zip_code, street, house_number)
-VALUES (nextval('institute_user_seq'), 'Peter', 'Weber', '1982-04-08', 'Germany', 'Munich', '80331', 'Sendlinger Strasse', '12');
+VALUES (nextval('institute_user_seq'), 'Peter', 'Weber', '1982-04-08', 'Germany', 'Munich', '80331', 'Sendlinger Strasse', '48');
 INSERT INTO statistic_user (id, first_name, last_name, birth_date, external_id, country, city, zip_code, street, house_number) VALUES
-   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT201', 'Germany', 'Munich', '80332', 'Sendlinger Strasse', '12'),
-   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT202', 'Germany', 'Munich', '80331', 'Sendlinger Straße', '12'),
-   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT204', 'Germany', 'Augsburg', '80331', 'Sendlinger Strasse', '12'),
+   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT201', 'Germany', 'Munich', '80332', 'Sendlinger Strasse', '56'),
+   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT202', 'Germany', 'Munich', '80331', 'Sendlinger Straße', '12A'),
+   (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT204', 'Germany', 'Augsburg', '80331', 'Sendlinger Strasse', '11'),
    (nextval('statistic_user_seq'), 'Peter', 'Weber', '1982-04-08', 'EXT205', 'Austria', 'Salzburg', '80331', 'Sendlinger Strasse', '12');
 
 -- Person C: Julia Fischer

@@ -70,6 +70,6 @@ class UserSearchAssistantTest {
                 parameters -> userSearchAssistant.search(new UserSearchQuery(parameters.get("firstName"), parameters.get("lastName"), parameters.get("birthDate"))),
                 new UserSearchEvaluationStrategy());
 
-        assertThat(report.score()).isGreaterThan(60.0);
+        assertThat(report.score()).isGreaterThan(66.0);
     }
 }

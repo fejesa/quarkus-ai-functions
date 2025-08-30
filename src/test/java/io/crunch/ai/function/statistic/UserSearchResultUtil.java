@@ -1,6 +1,5 @@
 package io.crunch.ai.function.statistic;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crunch.ai.function.common.Address;
@@ -49,31 +48,5 @@ public class UserSearchResultUtil {
 
     public static UserSearchResult fromString(String json) throws IOException {
         return new ObjectMapper().readValue(json, UserSearchResult.class);
-    }
-
-    public static void main(String[] args) throws JsonProcessingException {
-        var s = """
-                {
-                  "type":"SIMILARMATCH",
-                  "users":[{
-                    "person":{"firstName": "Anna", "lastName": "Schmidt", "birthDate": "1993-09-12"},
-                    "address":{"country":"Germany","city":"Berlin","zipCode":"10117","street":"Unter den Linden","houseNumber":"77"},
-                    "similarityScore":0.8297546897546898,
-                    "explanation":"country matches, city matches, zipCode differs, street matches, houseNumber differs"
-                  },{
-                    "person":{"firstName": "Anna", "lastName": "Schmidt", "birthDate": "1993-09-12"},
-                    "address":{"country":"Germany","city":"Potsdam","zipCode":"10117","street":"Unter den Linden","houseNumber":"56"},
-                    "similarityScore":0.6653852610374349,
-                    "explanation":"country matches, city differs, zipCode matches, street matches, houseNumber differs"
-                  },{
-                    "person":{"firstName": "Anna", "lastName": "Schmidt", "birthDate": "1993-09-12"},
-                    "address":{"country":"Austria","city":"Vienna","zipCode":"10117","street":"Unter den Linden","houseNumber":"13"},
-                    "similarityScore":0.5788359788359788,
-                    "explanation":"country differs, city matches, zipCode matches, street matches, houseNumber differs"
-                  }]
-                }
-                """;
-        var result = new ObjectMapper().readValue(s, UserSearchResult.class);
-        System.out.println(result);
     }
 }
