@@ -3,7 +3,6 @@ package io.crunch.ai.function.institute;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.crunch.ai.function.statistic.StatisticUserService;
-import io.crunch.ai.function.statistic.UserSearchQuery;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import jakarta.enterprise.context.ApplicationScoped;

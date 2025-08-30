@@ -1,4 +1,4 @@
-package io.crunch.ai.function.statistic;
+package io.crunch.ai.function.institute;
 
 import jakarta.ws.rs.QueryParam;
 

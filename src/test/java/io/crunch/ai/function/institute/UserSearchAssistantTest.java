@@ -1,7 +1,6 @@
 package io.crunch.ai.function.institute;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.crunch.ai.function.statistic.UserSearchQuery;
 import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
 import io.quarkiverse.langchain4j.scorer.junit5.ScorerConfiguration;
 import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
