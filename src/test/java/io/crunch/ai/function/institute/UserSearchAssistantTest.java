@@ -45,22 +45,26 @@ class UserSearchAssistantTest {
                         1.0, "No explanation available", "EXT-1001"))).build(),
             EvaluationSample.<String>builder()
                 .withName("SimilarMatches")
-                .withParameter(new NamedParameter("firstName", "Anna"))
-                .withParameter(new NamedParameter("lastName", "Schmidt"))
-                .withParameter(new NamedParameter("birthDate", "1993-09-12"))
+                .withParameter(new NamedParameter("firstName", "Peter"))
+                .withParameter(new NamedParameter("lastName", "Weber"))
+                .withParameter(new NamedParameter("birthDate", "1982-04-08"))
                 .withExpectedOutput(
                     similarMatchesAsString(List.of(
                         matchUser(
-                            person("Anna", "Schmidt", "1993-09-12"),
-                            address("Germany", "Berlin", "10117", "Mozart strasse", "78A"),
+                            person("Peter", "Weber", "1982-04-08"),
+                            address("Germany", "Munich", "80331", "Sendlinger Strasse", "56"),
                             0.0, "", ""),
                         matchUser(
-                            person("Anna", "Schmidt", "1993-09-12"),
-                            address("Germany", "Potsdam", "10117", "Unter den Linden", "56"),
+                            person("Peter", "Weber", "1982-04-08"),
+                            address("Germany", "Munich", "10117", "Sendlinger Straße", "12A"),
                             0.0, "", ""),
                         matchUser(
-                            person("Anna", "Schmidt", "1993-09-12"),
-                            address("Austria", "Vienna", "10117", "Unter den Linden", "13"),
+                                person("Peter", "Weber", "1982-04-08"),
+                                address("Austria", "Salzburg", "80331", "Sendlinger Strasse", "12"),
+                                0.0, "", ""),
+                        matchUser(
+                            person("Peter", "Weber", "1982-04-08"),
+                            address("Germany", "Augsburg", "80331", "Sendlinger Strasse", "11"),
                             0.0, "", "")))).build()
         );
 
@@ -69,6 +73,6 @@ class UserSearchAssistantTest {
                 parameters -> userSearchAssistant.search(new UserSearchQuery(parameters.get("firstName"), parameters.get("lastName"), parameters.get("birthDate"))),
                 new UserSearchEvaluationStrategy());
 
-        assertThat(report.score()).isGreaterThan(66.0);
+        assertThat(report.score()).isGreaterThan(100.0);
     }
 }
