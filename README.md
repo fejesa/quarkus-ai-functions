@@ -357,3 +357,80 @@ I realized:
 * Giving too many tools increases confusion and looping.
 * Delegating too much business logic to the LLM makes prompts fragile.
 * A safer design is decomposition: break the task into smaller steps with validators in between.
+
+## Installation
+### Prerequisites
+- JDK 21 or higher
+- Maven 3.5+
+- Docker
+- [Ollama](https://ollama.com) installed
+- [httpie](https://httpie.io/) installed (optional, but useful for testing)
+
+### Steps
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/fejesa/quarkus-ai-functions.git
+    ```
+2. Build the project:
+   ```sh
+   mvn clean install
+   ```
+3. Run the application in development mode:
+   ```sh
+    mvn quarkus:dev
+    ```
+**Note**: No need to run neither the Ollama nor the PostgreSQL manually — Quarkus Dev mode will automatically start them for you. If the LLM models are not available locally, Quarkus will download them automatically, but this may take some time.
+
+## Configuration
+The application can be configured via `application.properties`. The following properties are available:
+```properties
+quarkus.http.port = 8080
+
+# PostgreSQL database automatically created by Dev Services with the following settings
+quarkus.devservices.enabled = true
+quarkus.datasource.devservices.port = 5432
+quarkus.datasource.devservices.db-name = quarkus
+quarkus.datasource.devservices.username = quarkus
+quarkus.datasource.devservices.password = quarkus
+
+quarkus.hibernate-orm.schema-management.strategy = drop-and-create
+quarkus.hibernate-orm.log.sql = true
+
+quarkus.langchain4j.log-requests = true
+quarkus.langchain4j.log-responses = true
+# The temperature to use for the chat model. Temperature is a value between 0 and 1, where lower values make the model more deterministic and higher values make it more creative.
+quarkus.langchain4j.temperature = 0.1
+# Global timeout for requests to LLM APIs
+quarkus.langchain4j.timeout = 90s
+quarkus.langchain4j.guardrails.max-retries = 2
+
+# The chat model to use. In case of Ollama, llama3.1 is the default chat model.
+quarkus.langchain4j.ollama.chat-model.model-id = llama3.1
+# The format to return a response in. Format can be json or a JSON schema, or text; in this application, we use JSON.
+quarkus.langchain4j.ollama.chat-model.format = JSON
+
+# The REST Assured client timeout for testing.
+quarkus.http.test-timeout = 60s
+```
+
+The sample data - defined in the `import.sql` - is automatically loaded into the database when the application starts.
+
+## Testing the Application
+You can test the application using [httpie](https://httpie.io/) or [curl](https://curl.se/) or any REST client of your choice.
+### Example Requests
+No match found:
+```sh
+http -v localhost:8080/users firstName==Alice lastName==Johnson birthDate==1990-05-21
+```
+
+Exact match found:
+```sh
+ http -v localhost:8080/users firstName==Clara lastName==Meier birthDate==2000-07-21
+```
+
+Multiple similar matches found:
+```sh
+http -v localhost:8080/users firstName==Peter lastName==Weber birthDate==1982-04-08
+```
+
+**Note:** It takes some time for the model to respond, and it can also happen that the model needs to be downloaded first. So please be patient.
