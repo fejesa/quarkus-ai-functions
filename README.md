@@ -183,6 +183,10 @@ And `MatchUser` looked like this:
 record MatchUser(Person person, Address address, Double score, String explanation, String externalId) {}
 ```
 
+The full type hierarchy is shown below:
+
+![Type Hierarchy](docs/output-types-diagram.png)
+
 This design leveraged **sealed types** and **records** in Java, giving me safe and concise code.
 
 But here’s the bad news: **LangChain4j does not support polymorphism.**
