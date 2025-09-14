@@ -17,8 +17,8 @@ That led me to explore, using **LangChain4j, [Quarkus](https://quarkus.io/), and
 * manipulating the flow of execution, so the program becomes more dynamic and adaptable.
 
 Think of it like classic control structures in programming — but driven by natural language instead of code:
-* Selection → decisions and branching (like an `if` statement),
-* Repetition → looping, i.e., repeating a step multiple times (like a `for` loop).
+* Selection:  decisions and branching (like an `if` statement),
+* Repetition: looping, i.e., repeating a step multiple times (like a `for` loop).
 
 ## The Problem I Wanted to Solve
 Systems integration is not a new topic — we often need to access or provide data to other systems.
@@ -38,7 +38,7 @@ So how can Institute decide which user record best matches?
 
 Here I used the [Jaro–Winkler Distance](https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance), a similarity measure that quantifies the difference between two strings, often used in record linkage, data deduplication, and string matching. I calculated similarity scores between addresses, and the response contained these scores for each record.
 
-But the story did not stop there! I also wanted the LLM to generate a **detailed explanation** in the response about the exact differences between the records.
+But the story did not stop there! I also wanted the LLM to **generate a detailed explanation** in the response about the exact differences between the records.
 
 (By the way: I suspected I was asking too much from the LLM. But honestly, that was the main goal of this experiment 🙂).
 
@@ -230,7 +230,7 @@ I defined the following tools:
 * `InstituteUserService#getUserAddress(Person person)` Retrieves the user’s address from the Institute system.
 * `SimilarityDistanceCalculator#jaroWinklerSimilarity(Address original, Address similar)` Computes similarity scores between two addresses using the Jaro–Winkler distance algorithm.
 
-** Note:** Some model can calculate similarity internally, but I wanted to experiment with tool calling.
+**Note:** Some model can calculate similarity internally, but I wanted to experiment with tool calling.
 
 Each tool has different parameter types that must be constructed properly by the model in order to be called. This is one of the reasons why **accurate JSON schema definitions** are so critical when working with LLMs.
 
@@ -238,9 +238,9 @@ Now let’s see how the sequence diagram looks in the case where similar users a
 
 ![Sequence Diagram](docs/flow-of-execution-diagram.png)
 
-* The red arrows represent the REST calls to the LLM. These calls contain: which tool can be called/used, with which parameters, and in some cases, also the results of tool executions that should be taken into account by the model.
-* The blue arrows are the responses sent back by the LLM. These contain the instructions for which tool should be executed, along with the provided parameters.
-* The green arrows represent the actual tool executions performed by the application.
+* The **red arrows** represent the REST calls to the LLM. These calls contain: which tool can be called/used, with which parameters, and in some cases, also the results of tool executions that should be taken into account by the model.
+* The **blue arrows** are the responses sent back by the LLM. These contain the instructions for which tool should be executed, along with the provided parameters.
+* The **green arrows** represent the actual tool executions performed by the application.
 
 Here’s how the flow looks in detail:
 * After we send the extended prompt (with tool descriptions) to the model, it **calls the Statistic API** to search for the user.
@@ -300,7 +300,7 @@ The response is parsed by LangChain4j, which extracts the tool call request and 
 ## Challenges with System Prompts and Tool Use
 Writing a system prompt for this context turned out to be really challenging. Even small changes — like using similar words or synonyms — could confuse the model. From a programmer’s perspective, this business use case seems simple. But when you delegate the interpretation and execution of business logic to an LLM, things are not that straightforward.
 
-One prompt might be executed correctly by one model, but another model could completely misinterpret it. In fact, I found that **clear, explicit instructions for the model are even more important than writing a requirements specification for a developer**.
+One prompt might be executed correctly by one model, but another model could completely misinterpret it. In fact, I found that **clear, explicit instructions for the model are even more important than writing a very detailed requirements specification for a developer**.
 
 And here’s the tricky part: any change in the prompt needs to be documented and tested carefully. Sometimes I only wanted to polish the prompt to improve the output quality, but the result ended up being the exact opposite!
 
@@ -309,11 +309,11 @@ Below are some of the main issues I encountered during prompt engineering. (The 
 **Missing** `birthDate` **during deserialization**
 * **Issue**: Jackson failed with Missing required creator property 'birthDate' when deserializing a Person record.
 * **Category**: Schema / Validation mismatch
-* **Cause**: The JSON didn’t always contain birthDate, but the record field was annotated with @JsonProperty(required = true).
-* **Solution**: Enforce birthDate as mandatory both in the schema and during input validation. Keep @JsonProperty(required = true) and fail early if the field is missing.
+* **Cause**: The JSON didn’t always contain birthDate, but the record field was annotated with `@JsonProperty(required = true)`.
+* **Solution**: Enforce birthDate as mandatory both in the schema and during input validation. Keep `@JsonProperty(required = true)` and fail early if the field is missing.
 
 **Model repeatedly calling the same tool**
-* **Issue**: The model retried the same function call (e.g., searchUser) multiple times.
+* **Issue**: The model retried the same function call (e.g., `searchUser`) multiple times.
 * **Category**: Looping / Retry hallucination
 * **Cause**: LLM uncertainty led to uncontrolled retries.
 * **Solution**: Add a strict prompt rule: _“Do not repeat tool calls with the same input.”_
@@ -349,7 +349,7 @@ Below are some of the main issues I encountered during prompt engineering. (The 
 
 And many, many more! These problems really showed me how fragile prompt engineering can be. What looks like a minor detail for a human developer can completely derail the model. It sometimes felt like debugging a black box that insists on being creative.
 
-** Note:** The working system prompts are not optimal. I’m sure they can be improved further. But for now, they work well enough to demonstrate the concept.
+**Note:** The working system prompts are not optimal. I’m sure they can be improved further. But for now, they work well enough to demonstrate the concept.
 
 ## Final Thoughts
 The most challenging part of this project was **writing system prompts**. Any small change could break the whole process: hallucinations, malformed JSON, infinite loops.
