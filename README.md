@@ -77,7 +77,7 @@ Case 2: Exact match found
 }
 ```
 
-Case 3: Multiple candidate matches
+Case 3: Multiple candidate matches where 4 users were found
 ```json
 {
     "type": "SIMILARMATCH",
@@ -215,3 +215,84 @@ record NoMatchResult(Person person) implements UserSearchResult {}
 ```
 
 The "type" field is injected into JSON for the LLM, but is not part of the Java hierarchy (see the example outputs above).
+
+## Flow of Execution
+I did not want to implement the business logic in Java code. Instead, I only exposed the tools/functions that can be used by the LLM. But how can the application provide the expected output without a single line of business logic? This is where **system prompts** come into play! Instead of writing imperative code, I wrote a detailed description of the business logic in natural language, which guided the LLM in orchestrating the tools.
+
+The following diagram shows the main components of the application and their relationships.
+
+![Architecture](docs/component-diagram.png)
+
+where the `UserSearchAssistant` is registered as an `AiService`, the other components are the tools, and LangChain4j handles the orchestration.
+
+I defined the following tools:
+* `StatisticUserService#searchUser(String firstName, String lastName, String birthDate)` Searches users in the Statistic database based on the provided filtering criteria. In this project, the service also runs within the same Java application, but in the real world it should be a remote service accessed via REST.
+* `InstituteUserService#getUserAddress(Person person)` Retrieves the user’s address from the Institute system.
+* `SimilarityDistanceCalculator#jaroWinklerSimilarity(Address original, Address similar)` Computes similarity scores between two addresses using the Jaro–Winkler distance algorithm.
+
+** Note:** Some model can calculate similarity internally, but I wanted to experiment with tool calling.
+
+Each tool has different parameter types that must be constructed properly by the model in order to be called. This is one of the reasons why **accurate JSON schema definitions** are so critical when working with LLMs.
+
+Now let’s see how the sequence diagram looks in the case where similar users are found:
+
+![Sequence Diagram](docs/flow-of-execution-diagram.png)
+
+* The red arrows represent the REST calls to the LLM. These calls contain: which tool can be called/used, with which parameters, and in some cases, also the results of tool executions that should be taken into account by the model.
+* The blue arrows are the responses sent back by the LLM. These contain the instructions for which tool should be executed, along with the provided parameters.
+* The green arrows represent the actual tool executions performed by the application.
+
+Here’s how the flow looks in detail:
+* After we send the extended prompt (with tool descriptions) to the model, it **calls the Statistic API** to search for the user.
+* The model analyzes the response and decides whether the case is a `SIMILARMATCH`.
+* If it is, the model calls the **getUserAddress** tool to fetch the Institute user’s address, which will serve as the baseline for similarity calculations.
+* Next, the model **ITERATES over the list of candidate addresses** and calls the **jaroWinklerSimilarity** tool for each candidate. (For simplicity, the diagram only shows two iterations.)
+* After obtaining similarity scores, the model **updates the score fields** in the JSON.
+* Finally, the model goes through each address field—country, city, zip code, street, house number—and **generates an explanation of the differences**, inserting them into the explanation field of the JSON.
+
+Wow! It looks like a fairly complex workflow, but if you were to implement it in code, it would be quite straightforward. For the LLM, however, this orchestration is much more fragile and error-prone.
+
+But how the LLM tool access request looks like? Here’s an example response body from the LLM when it wants to call the `jaroWinklerSimilarity` function:
+```json
+{
+  "model": "llama3.1",
+  "created_at": "2025-09-12T15:17:17.613184Z",
+  "message": {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "function": {
+          "name": "jaroWinklerSimilarity",
+          "arguments": {
+            "original": {
+              "city": "Munich",
+              "country": "Germany",
+              "houseNumber": "48",
+              "street": "Sendlinger Strasse",
+              "zipCode": "80331"
+            },
+            "similar": {
+              "city": "Salzburg",
+              "country": "Austria",
+              "houseNumber": "12",
+              "street": "Sendlinger Strasse",
+              "zipCode": "80331"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "done_reason": "stop",
+  "done": true,
+  "total_duration": 2281647584,
+  "load_duration": 53564417,
+  "prompt_eval_count": 2519,
+  "prompt_eval_duration": 115408667,
+  "eval_count": 78,
+  "eval_duration": 2101600166
+}
+```
+
+The response is parsed by LangChain4j, which extracts the tool call request and executes the function with the provided arguments.
