@@ -296,3 +296,64 @@ But how the LLM tool access request looks like? Here’s an example response bod
 ```
 
 The response is parsed by LangChain4j, which extracts the tool call request and executes the function with the provided arguments.
+
+## Challenges with System Prompts and Tool Use
+Writing a system prompt for this context turned out to be really challenging. Even small changes — like using similar words or synonyms — could confuse the model. From a programmer’s perspective, this business use case seems simple. But when you delegate the interpretation and execution of business logic to an LLM, things are not that straightforward.
+
+One prompt might be executed correctly by one model, but another model could completely misinterpret it. In fact, I found that **clear, explicit instructions for the model are even more important than writing a requirements specification for a developer**.
+
+And here’s the tricky part: any change in the prompt needs to be documented and tested carefully. Sometimes I only wanted to polish the prompt to improve the output quality, but the result ended up being the exact opposite!
+
+Below are some of the main issues I encountered during prompt engineering. (The list is not complete!)
+
+**Missing** `birthDate` **during deserialization**
+* **Issue**: Jackson failed with Missing required creator property 'birthDate' when deserializing a Person record.
+* **Category**: Schema / Validation mismatch
+* **Cause**: The JSON didn’t always contain birthDate, but the record field was annotated with @JsonProperty(required = true).
+* **Solution**: Enforce birthDate as mandatory both in the schema and during input validation. Keep @JsonProperty(required = true) and fail early if the field is missing.
+
+**Model repeatedly calling the same tool**
+* **Issue**: The model retried the same function call (e.g., searchUser) multiple times.
+* **Category**: Looping / Retry hallucination
+* **Cause**: LLM uncertainty led to uncontrolled retries.
+* **Solution**: Add a strict prompt rule: _“Do not repeat tool calls with the same input.”_
+
+**Core identity fields were modified**
+* **Issue**: In `SIMILARMATCH`, the model sometimes changed `firstName`, `lastName`, or `birthDate`.
+* **Category**: Hallucination / Data substitution
+* **Cause**: The LLM attempted to normalize or “correct” identifiers.
+* **Solution**: Add explicit binding rules: _“firstName, lastName, and birthDate MUST NEVER be changed, corrected, reformatted, guessed, or substituted.”_ Only address fields are mutable during similarity checks.
+
+**Unnecessary tool recursions**
+* **Issue**: The model re-called `getUserAddress` or `jaroWinklerSimilarity` multiple times unnecessarily.
+* **Category**: Over-generation / Looping
+* **Cause**: The LLM lacked awareness of workflow completion.
+* **Solution**: Enforce strict workflow rules in the prompt:
+  * Call `getUserAddress` exactly once.
+  * Compare each candidate with `jaroWinklerSimilarity`.
+  * Aggregate and return results without re-calling tools.
+
+**Candidate address replaced by original address**
+* **Issue**: In the output, a candidate’s address was sometimes replaced by the original user’s address.
+* **Category**: Data leakage / Confusion error
+* **Cause**: The model confused the baseline (original address) with the candidates.
+* **Solution**: Add a rule to the prompt: _“The original address is ONLY a baseline for similarity. NEVER use it as a candidate in results.”_
+
+**JSON formatting errors**
+* **Issue**: The model returned objects as stringified JSON (`"{…}"`) or with incorrect field names.
+* **Category**: Schema conformance failure
+* **Cause**: The LLM confused JSON objects with strings and sometimes invented field names.
+* **Solution**:
+  * Add prompt guidance: _“Always pass tool parameters as JSON OBJECTS, never strings.”_
+  * Enforce exact field names: `country`, `city`, `zipCode`, `street`, `houseNumber`.
+
+And many, many more! These problems really showed me how fragile prompt engineering can be. What looks like a minor detail for a human developer can completely derail the model. It sometimes felt like debugging a black box that insists on being creative.
+
+** Note:** The working system prompts are not optimal. I’m sure they can be improved further. But for now, they work well enough to demonstrate the concept.
+
+## Final Thoughts
+The most challenging part of this project was **writing system prompts**. Any small change could break the whole process: hallucinations, malformed JSON, infinite loops.
+I realized:
+* Giving too many tools increases confusion and looping.
+* Delegating too much business logic to the LLM makes prompts fragile.
+* A safer design is decomposition: break the task into smaller steps with validators in between.
