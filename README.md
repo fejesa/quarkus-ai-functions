@@ -164,3 +164,50 @@ I opted for:
 **Note:** I used Ollama as the LLM backend, which runs models locally. I tried several models, but for this experiment, I settled on `llama3-8b`, which provided a good balance between performance and quality.
 
 Now let’s walk through each of the topics I mentioned in the introduction.
+
+## Data Structures and Polymorphism
+Polymorphism brings flexibility, reusability, and maintainability. I defined the Statistic API like this:
+```java
+UserSearchResult searchUser(String firstName, String lastName, String birthDate);
+```
+where `UserSearchResult` can represent different result types:
+```java
+sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesResult, ExactMatchResult {}
+record NoMatchResult(Person person) implements UserSearchResult {}
+record ExactMatchResult(MatchUser user) implements UserSearchResult {}
+record SimilarMatchesResult(List<MatchUser> users) implements UserSearchResult {}
+```
+
+And `MatchUser` looked like this:
+```java
+record MatchUser(Person person, Address address, Double score, String explanation, String externalId) {}
+```
+
+This design leveraged **sealed types** and **records** in Java, giving me safe and concise code.
+
+But here’s the bad news: **LangChain4j does not support polymorphism.**
+The LLM can consume and generate structured JSON, but it does not know which subtype a given JSON represents without a schema.
+
+**Good news**: In LangChain4j, JSON schema is automatically generated from POJOs in Quarkus/Spring Boot. You can enhance them with `@Description`. Example:
+```java
+@Description("The user's personal information, for example, first name, last name, and birth date")
+record Person(
+    @Description("The user's first name") String firstName,
+    @Description("The user's last name") String lastName,
+    @Description("The user's birth date") String birthDate
+) {}
+```
+
+But that still does not solve polymorphism. For that, I used [Jackson](https://github.com/FasterXML/jackson) java library annotations to help with serialization and deserialization.:
+```java
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type")
+sealed interface UserSearchResult permits NoMatchResult, SimilarMatchesResult, ExactMatchResult {}
+```
+
+With subtype markers:
+```java
+@UserSearchResultSubType("NONEMATCH")
+record NoMatchResult(Person person) implements UserSearchResult {}
+```
+
+The "type" field is injected into JSON for the LLM, but is not part of the Java hierarchy (see the example outputs above).
