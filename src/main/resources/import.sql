@@ -68,10 +68,10 @@ INSERT INTO statistic_user (id, first_name, last_name, birth_date, external_id, 
 INSERT INTO institute_user (id, first_name, last_name, birth_date, country, city, zip_code, street, house_number)
 VALUES (nextval('institute_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'Germany', 'Hamburg', '20095', 'Spitalerstrasse', '9');
 INSERT INTO statistic_user (id, first_name, last_name, birth_date, external_id, country, city, zip_code, street, house_number) VALUES
-   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT301', 'Germany', 'Hamburg', '20096', 'Spitalerstrasse', '9'),
-   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT302', 'Germany', 'Hamburg', '20095', 'Spitaler Straße', '9'),
-   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT303', 'Germany', 'Hamburg', '20095', 'Spitalerstr.', '9'),
-   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT304', 'Germany', 'Bremen', '20095', 'Spitalerstrasse', '9'),
+   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT301', 'Germany', 'Hamburg', '20096', 'Spitalerstrasse', '91'),
+   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT302', 'Germany', 'Hamburg', '20095', 'Spitaler Strasse', '19'),
+   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT303', 'Germany', 'Hamburg', '20095', 'Spitalerstr.', '99'),
+   (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT304', 'Germany', 'Bremen', '20095', 'Spitalerstrasse', '89'),
    (nextval('statistic_user_seq'), 'Julia', 'Fischer', '1991-06-05', 'EXT305', 'Austria', 'Vienna', '20095', 'Spitalerstrasse', '9');
 
 -- Person D: Markus Keller
