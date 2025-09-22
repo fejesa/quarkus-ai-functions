@@ -1,5 +1,6 @@
 package io.crunch.ai.function.institute;
 
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
@@ -198,5 +199,5 @@ public interface UserSearchAssistant {
     )
     @ToolBox({StatisticUserService.class, InstituteUserService.class, SimilarityDistanceCalculator.class})
     @OutputGuardrails(UserSearchOutputGuardrail.class)
-    String search(@UserMessage UserSearchQuery userSearchQuery);
+    String search(@MemoryId String sessionId, @UserMessage UserSearchQuery userSearchQuery);
 }

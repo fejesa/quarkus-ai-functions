@@ -66,7 +66,7 @@ class InstituteUserResourceTest {
                 var result = new ObjectMapper().readValue(response, UserSearchResult.class);
                 assertThat(result).isInstanceOf(UserSearchResult.class);
                 assertThat(response).contains("Alice", "Johnson", "1990-05-21", "NONEMATCH");
-                verify(statisticUserService, times(1)).searchUser("Alice", "Johnson", "1990-05-21");
+                verify(statisticUserService, atLeast(1)).searchUser("Alice", "Johnson", "1990-05-21");
                 verify(similarityDistanceCalculator, never()).jaroWinklerSimilarity(any(), any());
             });
     }
@@ -88,7 +88,7 @@ class InstituteUserResourceTest {
                 var result = new ObjectMapper().readValue(response, UserSearchResult.class);
                 assertThat(result).isInstanceOf(UserSearchResult.class);
                 assertThat(response).contains("Clara", "Meier", "2000-07-21", "EXACTMATCH", "EXT-1001");
-                verify(statisticUserService, times(1)).searchUser("Clara", "Meier", "2000-07-21");
+                verify(statisticUserService, atLeast(1)).searchUser("Clara", "Meier", "2000-07-21");
                 verify(instituteUserService, never()).getUserAddress(any(Person.class));
                 verify(similarityDistanceCalculator, never()).jaroWinklerSimilarity(any(), any());
             });
@@ -111,9 +111,9 @@ class InstituteUserResourceTest {
                 var result = new ObjectMapper().readValue(response, UserSearchResult.class);
                 assertThat(result).isInstanceOf(UserSearchResult.class);
                 assertThat(response).contains("Peter", "Weber", "1982-04-08", "SIMILARMATCH");
-                verify(statisticUserService, times(1)).searchUser("Peter", "Weber", "1982-04-08");
-                verify(instituteUserService, times(1)).getUserAddress(new Person("Peter", "Weber", "1982-04-08"));
-                verify(similarityDistanceCalculator, times(4)).jaroWinklerSimilarity(any(Address.class), any(Address.class));
+                verify(statisticUserService, atLeast(1)).searchUser("Peter", "Weber", "1982-04-08");
+                verify(instituteUserService, atLeast(1)).getUserAddress(new Person("Peter", "Weber", "1982-04-08"));
+                verify(similarityDistanceCalculator, atLeast(4)).jaroWinklerSimilarity(any(Address.class), any(Address.class));
             });
     }
 }

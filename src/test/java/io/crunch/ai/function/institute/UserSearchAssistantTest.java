@@ -1,6 +1,8 @@
 package io.crunch.ai.function.institute;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
 import io.quarkiverse.langchain4j.scorer.junit5.ScorerConfiguration;
 import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
@@ -12,6 +14,8 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static io.crunch.ai.function.statistic.UserSearchResultUtil.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -22,6 +26,9 @@ class UserSearchAssistantTest {
 
     @Inject
     UserSearchAssistant userSearchAssistant;
+
+    @Inject
+    ChatMemoryProvider chatMemoryProvider;
 
     @Test
     void scoreExactMatch(@ScorerConfiguration Scorer scorer) throws JsonProcessingException {
@@ -88,11 +95,16 @@ class UserSearchAssistantTest {
     }
 
     private void score(Scorer scorer, Samples<String> samples, double threshold) {
-        var report = scorer.evaluate(
-                samples,
-                parameters -> userSearchAssistant.search(new UserSearchQuery(parameters.get("firstName"), parameters.get("lastName"), parameters.get("birthDate"))),
-                new UserSearchEvaluationStrategy());
+        var sessionId = UUID.randomUUID().toString();
+        try {
+            var report = scorer.evaluate(
+                    samples,
+                    parameters -> userSearchAssistant.search(sessionId, new UserSearchQuery(parameters.get("firstName"), parameters.get("lastName"), parameters.get("birthDate"))),
+                    new UserSearchEvaluationStrategy());
 
-        assertThat(report.score()).isGreaterThan(threshold);
+            assertThat(report.score()).isGreaterThan(threshold);
+        } finally {
+            Optional.ofNullable(chatMemoryProvider.get(sessionId)).ifPresent(ChatMemory::clear);
+        }
     }
 }
