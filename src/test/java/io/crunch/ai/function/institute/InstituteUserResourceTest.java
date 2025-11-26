@@ -6,6 +6,7 @@ import io.crunch.ai.function.common.Person;
 import io.crunch.ai.function.statistic.StatisticUserService;
 import io.crunch.ai.function.statistic.UserSearchResult;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
+@TestProfile(UserSearchTestProfile.class)
 class InstituteUserResourceTest {
 
     @InjectSpy

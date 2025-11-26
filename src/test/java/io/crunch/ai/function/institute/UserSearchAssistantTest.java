@@ -10,6 +10,7 @@ import io.quarkiverse.langchain4j.testing.scorer.Parameter.NamedParameter;
 import io.quarkiverse.langchain4j.testing.scorer.Samples;
 import io.quarkiverse.langchain4j.testing.scorer.Scorer;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @QuarkusTest
 @AiScorer
+@TestProfile(UserSearchTestProfile.class)
 class UserSearchAssistantTest {
 
     @Inject
