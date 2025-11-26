@@ -385,10 +385,9 @@ I realized:
 The application can be configured via `application.properties`. The following properties are available:
 ```properties
 quarkus.http.port = 8080
-
 # PostgreSQL database automatically created by Dev Services with the following settings
 quarkus.devservices.enabled = true
-quarkus.datasource.devservices.port = 5432
+quarkus.datasource.devservices.port = 5434
 quarkus.datasource.devservices.db-name = quarkus
 quarkus.datasource.devservices.username = quarkus
 quarkus.datasource.devservices.password = quarkus
@@ -401,7 +400,7 @@ quarkus.langchain4j.log-responses = true
 # The temperature to use for the chat model. Temperature is a value between 0 and 1, where lower values make the model more deterministic and higher values make it more creative.
 quarkus.langchain4j.temperature = 0.1
 # Global timeout for requests to LLM APIs
-quarkus.langchain4j.timeout = 90s
+quarkus.langchain4j.timeout = 120s
 quarkus.langchain4j.guardrails.max-retries = 2
 
 # The chat model to use. In case of Ollama, llama3.1 is the default chat model.
@@ -411,9 +410,50 @@ quarkus.langchain4j.ollama.chat-model.format = JSON
 
 # The REST Assured client timeout for testing.
 quarkus.http.test-timeout = 60s
+
+# LangFuse OpenTelemetry settings; set to false to disable
+quarkus.otel.enabled = true
+quarkus.otel.metrics.enabled = true
+# OpenTelemetry defines the encoding of telemetry data and the protocol used to exchange data between the client and the server. Default is grpc.
+quarkus.otel.exporter.otlp.traces.protocol = http/protobuf
+# LangFuse OpenTelemetry endpoint and authorization header
+quarkus.otel.exporter.otlp.traces.headers = Authorization=Basic ***
+quarkus.otel.exporter.otlp.traces.endpoint = http://localhost:3000/api/public/otel
+# quarkus.otel.exporter.otlp.logs.protocol = http/protobuf
+quarkus.langchain4j.tracing.include-prompt = true
+quarkus.langchain4j.tracing.include-completion = true
+quarkus.langchain4j.tracing.include-tool-arguments=true
+quarkus.langchain4j.tracing.include-tool-result=true
+
+# Grafana and OpenTelemetry ports for LGTM observability; by default testcontainers exposes these on random ports.
+quarkus.observability.lgtm.grafana-port = 3001
+quarkus.observability.lgtm.otel-grpc-port = 5317
+quarkus.observability.lgtm.otel-http-port = 5318
+# Grafana LGTM metrics
+quarkus.otel.exporter.otlp.metrics.endpoint = http://localhost:5318
+quarkus.otel.exporter.otlp.metrics.protocol = http/protobuf
+#Grafana LGTM logs
+quarkus.otel.exporter.otlp.logs.endpoint = http://localhost:5318
+quarkus.otel.exporter.otlp.logs.protocol = http/protobuf
 ```
 
 The sample data - defined in the `import.sql` - is automatically loaded into the database when the application starts.
+
+## Observability, Monitoring & Tracing
+- Observability is essential — it gives us visibility into what happens under the hood when our application runs, enabling reliable debugging, performance tuning, and root-cause analysis.
+- We rely on the “three pillars” of observability: **metrics** (system performance and health), **logs** (event history and context), and **traces** (detailed journeys of requests and LLM interactions).
+    - Metrics enable us to monitor throughput, latency, error rates, resource consumption — and alert on anomalies.
+    - Logs provide detailed context: timestamps, errors, stack traces, user actions, state changes — essential for forensic debugging and audit trails.
+    - Traces reconstruct the full flow of a request (or an LLM call), showing each step, latency, dependencies, and where things can go wrong.
+- For our LLM-based application, observability is even more critical: LLMs are non-deterministic, involve multiple subsystems (embedding, retrieval, generation, external APIs), and can fail or degrade silently.
+- We use **[Langfuse](https://github.com/langfuse/langfuse)** for tracing LLM interactions: it captures prompts, embeddings, tool calls, completions, latencies, costs and more — giving us full visibility into the LLM pipeline.
+    - Langfuse is open-source, self-hostable, and framework-agnostic — which makes it a robust, vendor-independent observability solution.
+    - With Langfuse we can debug complex agent flows, trace unexpected outputs or failures to exact inputs, optimize prompt engineering, and monitor performance & cost per call.
+    - Langfuse also supports evaluation workflows: tracking output quality over time, annotating traces, detecting regressions or drift — which helps maintain model reliability in production.
+- Combining standard application metrics/logs (via [Grafana](https://grafana.com/) / Prometheus / Loki) with detailed LLM tracing (via Langfuse) gives us a **holistic observability stack**: infrastructure, app, and LLM.
+- This observability stack makes our RAG application more maintainable, debuggable, auditable, and performant — especially important when serving real users in production.
+
+To run Langfuse locally with Docker, you can use the following the instructions [here](https://github.com/langfuse/langfuse).
 
 ## Testing the Application
 You can test the application using [httpie](https://httpie.io/) or [curl](https://curl.se/) or any REST client of your choice.
@@ -434,3 +474,5 @@ http -v localhost:8080/users firstName==Peter lastName==Weber birthDate==1982-04
 ```
 
 **Note:** It takes some time for the model to respond, and it can also happen that the model needs to be downloaded first. So please be patient.
+
+If you want to check the traces in Langfuse, make sure you have it running locally and configured properly in `application.properties`. You can then access the Langfuse UI at `http://localhost:3000`.
