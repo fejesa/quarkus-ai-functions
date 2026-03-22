@@ -360,7 +360,7 @@ I realized:
 
 ## Installation
 ### Prerequisites
-- JDK 21 or higher
+- JDK 25 or higher
 - Maven 3.5+
 - Docker
 - [Ollama](https://ollama.com) installed
