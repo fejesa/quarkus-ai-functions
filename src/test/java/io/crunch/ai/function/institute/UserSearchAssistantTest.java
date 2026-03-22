@@ -3,12 +3,12 @@ package io.crunch.ai.function.institute;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
-import io.quarkiverse.langchain4j.scorer.junit5.ScorerConfiguration;
-import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
-import io.quarkiverse.langchain4j.testing.scorer.Parameter.NamedParameter;
-import io.quarkiverse.langchain4j.testing.scorer.Samples;
-import io.quarkiverse.langchain4j.testing.scorer.Scorer;
+import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
+import io.quarkiverse.langchain4j.evaluation.junit5.ScorerConfiguration;
+import io.quarkiverse.langchain4j.testing.evaluation.EvaluationSample;
+import io.quarkiverse.langchain4j.testing.evaluation.Parameter.NamedParameter;
+import io.quarkiverse.langchain4j.testing.evaluation.Samples;
+import io.quarkiverse.langchain4j.testing.evaluation.Scorer;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
@@ -22,7 +22,7 @@ import static io.crunch.ai.function.statistic.UserSearchResultUtil.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @QuarkusTest
-@AiScorer
+@Evaluate
 @TestProfile(UserSearchTestProfile.class)
 class UserSearchAssistantTest {
 
